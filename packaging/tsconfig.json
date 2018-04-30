@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES6",
+    "declaration": true,
+    "outFile": "./vejay.js"
+  },
+  "include": [
+    "../src/**/*"
+  ],
+  "files": [
+    "../src/common/globalData.ts",
+    "../src/math/rectangle.ts",
+    "../src/display/displayObject.ts",
+    "../src/display/displayObjectContainer.ts",
+    "../src/display/stage.ts",
+    "../src/display/bitmap.ts"
+  ]
+}
