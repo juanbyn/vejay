@@ -8,14 +8,15 @@ module display {
             super();
             this._img = new Image();
             this._img.src = imgSrc;
-            
-            this._img.onload = () => {
-                this.width = this.width === undefined ? this._img.width : this.width;
-                this.height = this.height === undefined ? this._img.height : this.height;
-            };
+            this._img.onload = this.onLoad;
         }
         
-        public render(ctx, parentX, parentY) {
+        private onLoad(): void {
+            this.width = this.width === undefined ? this._img.width : this.width;
+            this.height = this.height === undefined ? this._img.height : this.height;
+        }
+        
+        public render(parentX, parentY) {
             this._viewport.setTo(parentX + this.x, parentY + this.y, this.width, this.height);
             var parentViewport = Stage.viewport;
             if (
@@ -28,7 +29,6 @@ module display {
             if (parentViewport.containsRect(this._viewport)) {
                 // ctx.drawImage(this._img, 0, 0, this._viewport.width, this._viewport.height, this._viewport.x, this._viewport.y, this._viewport.width, this._viewport.height);
                 this.drawImage(
-                    ctx,
                     0,
                     0,
                     this._viewport.width,
@@ -67,10 +67,11 @@ module display {
                 sHeight = dHeight = parentViewport.bottom - this._viewport.top;
             }
             // ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-            this.drawImage(ctx, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            this.drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
         }
         
-        private drawImage(ctx, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
+        private drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
+            var ctx = GlobalData.Ctx as CanvasRenderingContext2D;
             if (this.scaleX !== 1 || this.scaleY !== 1) {
                 ctx.translate(0, dHeight + Stage.viewport.y * 2);
                 ctx.scale(this.scaleX, this.scaleY);

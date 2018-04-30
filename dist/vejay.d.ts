@@ -1,6 +1,4 @@
-var math;
-(function (math) {
-    let rectanglePool = [];
+declare module math {
     /**
      * Rectangle 对象是按其位置（由它左上角的点 (x, y) 确定）以及宽度和高度定义的区域。<br/>
      * Rectangle 类的 x、y、width 和 height 属性相互独立；更改一个属性的值不会影响其他属性。
@@ -8,102 +6,50 @@ var math;
      * 属性的值将发生变化；如果更改 bottom 属性，则 height 属性的值将发生变化。
      */
     class Rectangle {
-        constructor(x = 0, y = 0, width = 0, height = 0) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-        }
         /**
          * 释放一个Rectangle实例到对象池
          */
-        static release(rect) {
-            if (!rect) {
-                return;
-            }
-            rectanglePool.push(rect);
-        }
+        static release(rect: Rectangle): void;
         /**
          * 从对象池中取出或创建一个新的Rectangle对象。
          */
-        static create() {
-            let rect = rectanglePool.pop();
-            if (!rect) {
-                rect = new Rectangle();
-            }
-            return rect;
-        }
+        static create(): Rectangle;
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        constructor(x?: number, y?: number, width?: number, height?: number);
         /**
          * x 和 width 属性的和。
          */
-        get right() {
-            return this.x + this.width;
-        }
-        set right(value) {
-            this.width = value - this.x;
-        }
+        right: number;
         /**
          * y 和 height 属性的和。
          */
-        get bottom() {
-            return this.y + this.height;
-        }
-        set bottom(value) {
-            this.height = value - this.y;
-        }
+        bottom: number;
         /**
          * 矩形左上角的 x 坐标。更改 Rectangle 对象的 left 属性对 y 和 height 属性没有影响。但是，它会影响 width 属性，而更改 x 值不会影响 width 属性。
          * left 属性的值等于 x 属性的值。
          */
-        get left() {
-            return this.x;
-        }
-        set left(value) {
-            this.width += this.x - value;
-            this.x = value;
-        }
+        left: number;
         /**
          * 矩形左上角的 y 坐标。更改 Rectangle 对象的 top 属性对 x 和 width 属性没有影响。但是，它会影响 height 属性，而更改 y 值不会影响 height 属性。<br/>
          * top 属性的值等于 y 属性的值。
          */
-        get top() {
-            return this.y;
-        }
-        set top(value) {
-            this.height += this.y - value;
-            this.y = value;
-        }
+        top: number;
         /**
          * 由该点的 x 和 y 坐标确定的 Rectangle 对象左上角的位置。
          */
-        get topLeft() {
-            return new math.Point(this.left, this.top);
-        }
-        set topLeft(value) {
-            this.top = value.y;
-            this.left = value.x;
-        }
+        topLeft: Point;
         /**
          * 由 right 和 bottom 属性的值确定的 Rectangle 对象的右下角的位置。
          */
-        get bottomRight() {
-            return new math.Point(this.right, this.bottom);
-        }
-        set bottomRight(value) {
-            this.bottom = value.y;
-            this.right = value.x;
-        }
+        bottomRight: Point;
         /**
          * 将源 Rectangle 对象中的所有矩形数据复制到调用方 Rectangle 对象中。
          * @param sourceRect 要从中复制数据的 Rectangle 对象。
          */
-        copyFrom(sourceRect) {
-            this.x = sourceRect.x;
-            this.y = sourceRect.y;
-            this.width = sourceRect.width;
-            this.height = sourceRect.height;
-            return this;
-        }
+        copyFrom(sourceRect: Rectangle): Rectangle;
         /**
          * 将 Rectangle 的成员设置为指定值
          * @param x 矩形左上角的 x 坐标。
@@ -111,25 +57,14 @@ var math;
          * @param width 矩形的宽度（以像素为单位）。
          * @param height 矩形的高度（以像素为单位）。
          */
-        setTo(x, y, width, height) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            return this;
-        }
+        setTo(x: number, y: number, width: number, height: number): Rectangle;
         /**
          * 确定由此 Rectangle 对象定义的矩形区域内是否包含指定的点。
          * @param x 检测点的x轴
          * @param y 检测点的y轴
          * @returns 如果检测点位于矩形内，返回true，否则，返回false
          */
-        contains(x, y) {
-            return this.x <= x &&
-                this.x + this.width >= x &&
-                this.y <= y &&
-                this.y + this.height >= y;
-        }
+        contains(x: number, y: number): boolean;
         /**
          * 如果在 toIntersect 参数中指定的 Rectangle 对象与此 Rectangle 对象相交，则返回交集区域作为 Rectangle 对象。如果矩形不相交，
          * 则此方法返回一个空的 Rectangle 对象，其属性设置为 0。
@@ -137,362 +72,163 @@ var math;
          * @returns 等于交集区域的 Rectangle 对象。如果该矩形不相交，则此方法返回一个空的 Rectangle 对象；即，其 x、y、width 和
          * height 属性均设置为 0 的矩形。
          */
-        intersection(toIntersect) {
-            return this.clone().$intersectInPlace(toIntersect);
-        }
+        intersection(toIntersect: Rectangle): Rectangle;
         /**
          * 按指定量增加 Rectangle 对象的大小（以像素为单位）
          * 保持 Rectangle 对象的中心点不变，使用 dx 值横向增加它的大小，使用 dy 值纵向增加它的大小。
          * @param dx Rectangle 对象横向增加的值。
          * @param dy Rectangle 对象纵向增加的值。
          */
-        inflate(dx, dy) {
-            this.x -= dx;
-            this.width += 2 * dx;
-            this.y -= dy;
-            this.height += 2 * dy;
-        }
+        inflate(dx: number, dy: number): void;
         /**
          * @private
          */
-        $intersectInPlace(clipRect) {
-            let x0 = this.x;
-            let y0 = this.y;
-            let x1 = clipRect.x;
-            let y1 = clipRect.y;
-            let l = Math.max(x0, x1);
-            let r = Math.min(x0 + this.width, x1 + clipRect.width);
-            if (l <= r) {
-                let t = Math.max(y0, y1);
-                let b = Math.min(y0 + this.height, y1 + clipRect.height);
-                if (t <= b) {
-                    this.setTo(l, t, r - l, b - t);
-                    return this;
-                }
-            }
-            this.setEmpty();
-            return this;
-        }
+        $intersectInPlace(clipRect: Rectangle): Rectangle;
         /**
          * 确定在 toIntersect 参数中指定的对象是否与此 Rectangle 对象相交。此方法检查指定的 Rectangle
          * 对象的 x、y、width 和 height 属性，以查看它是否与此 Rectangle 对象相交。
          * @param toIntersect 要与此 Rectangle 对象比较的 Rectangle 对象。
          * @returns 如果两个矩形相交，返回true，否则返回false
          */
-        intersects(toIntersect) {
-            return Math.max(this.x, toIntersect.x) <= Math.min(this.right, toIntersect.right)
-                && Math.max(this.y, toIntersect.y) <= Math.min(this.bottom, toIntersect.bottom);
-        }
+        intersects(toIntersect: Rectangle): boolean;
         /**
          * 确定此 Rectangle 对象是否为空。
          * @returns 如果 Rectangle 对象的宽度或高度小于等于 0，则返回 true 值，否则返回 false。
          */
-        isEmpty() {
-            return this.width <= 0 || this.height <= 0;
-        }
+        isEmpty(): boolean;
         /**
          * 将 Rectangle 对象的所有属性设置为 0。
          */
-        setEmpty() {
-            this.x = 0;
-            this.y = 0;
-            this.width = 0;
-            this.height = 0;
-        }
+        setEmpty(): void;
         /**
          * 返回一个新的 Rectangle 对象，其 x、y、width 和 height 属性的值与原始 Rectangle 对象的对应值相同。
          * @returns 新的 Rectangle 对象，其 x、y、width 和 height 属性的值与原始 Rectangle 对象的对应值相同。
          */
-        clone() {
-            return new Rectangle(this.x, this.y, this.width, this.height);
-        }
+        clone(): Rectangle;
         /**
          * 确定由此 Rectangle 对象定义的矩形区域内是否包含指定的点。
          * 此方法与 Rectangle.contains() 方法类似，只不过它采用 Point 对象作为参数。
          * @param point 包含点对象
          * @returns 如果包含，返回true，否则返回false
          */
-        containsPoint(point) {
-            if (this.x <= point.x
-                && this.x + this.width > point.x
-                && this.y <= point.y
-                && this.y + this.height > point.y) {
-                return true;
-            }
-            return false;
-        }
+        containsPoint(point: Point): boolean;
         /**
          * 确定此 Rectangle 对象内是否包含由 rect 参数指定的 Rectangle 对象。
          * 如果一个 Rectangle 对象完全在另一个 Rectangle 的边界内，我们说第二个 Rectangle 包含第一个 Rectangle。
          * @param rect 所检查的 Rectangle 对象
          * @returns 如果此 Rectangle 对象包含您指定的 Rectangle 对象，则返回 true 值，否则返回 false。
          */
-        containsRect(rect) {
-            let r1 = rect.x + rect.width;
-            let b1 = rect.y + rect.height;
-            let r2 = this.x + this.width;
-            let b2 = this.y + this.height;
-            return (rect.x >= this.x) && (rect.x < r2) && (rect.y >= this.y) && (rect.y < b2) && (r1 > this.x) && (r1 <= r2) && (b1 > this.y) && (b1 <= b2);
-        }
+        containsRect(rect: Rectangle): boolean;
         /**
          * 确定在 toCompare 参数中指定的对象是否等于此 Rectangle 对象。
          * 此方法将某个对象的 x、y、width 和 height 属性与此 Rectangle 对象所对应的相同属性进行比较。
          * @param toCompare 要与此 Rectangle 对象进行比较的矩形。
          * @returns 如果对象具有与此 Rectangle 对象完全相同的 x、y、width 和 height 属性值，则返回 true 值，否则返回 false。
          */
-        equals(toCompare) {
-            if (this === toCompare) {
-                return true;
-            }
-            return this.x === toCompare.x && this.y === toCompare.y
-                && this.width === toCompare.width && this.height === toCompare.height;
-        }
+        equals(toCompare: Rectangle): boolean;
         /**
          * 增加 Rectangle 对象的大小。此方法与 Rectangle.inflate() 方法类似，只不过它采用 Point 对象作为参数。
          * @param point The x property of this Point object is used to increase the horizontal dimension of the Rectangle object. The y property is used to increase the vertical dimension of the Rectangle object.
          */
-        inflatePoint(point) {
-            this.inflate(point.x, point.y);
-        }
+        inflatePoint(point: Point): void;
         /**
          * 按指定量调整 Rectangle 对象的位置（由其左上角确定）。
          * @param dx 将 Rectangle 对象的 x 值移动此数量。
          * @param dy 将 Rectangle 对象的 t 值移动此数量。
          */
-        offset(dx, dy) {
-            this.x += dx;
-            this.y += dy;
-        }
+        offset(dx: number, dy: number): void;
         /**
          * 将 Point 对象用作参数来调整 Rectangle 对象的位置。此方法与 Rectangle.offset() 方法类似，只不过它采用 Point 对象作为参数。
          * @param point 要用于偏移此 Rectangle 对象的 Point 对象。
          */
-        offsetPoint(point) {
-            this.offset(point.x, point.y);
-        }
+        offsetPoint(point: Point): void;
         /**
          * 生成并返回一个字符串，该字符串列出 Rectangle 对象的水平位置和垂直位置以及高度和宽度。
          * @returns 一个字符串，它列出了 Rectangle 对象的下列各个属性的值：x、y、width 和 height。
          */
-        toString() {
-            return "(x=" + this.x + ", y=" + this.y + ", width=" + this.width + ", height=" + this.height + ")";
-        }
+        toString(): string;
         /**
          * 通过填充两个矩形之间的水平和垂直空间，将这两个矩形组合在一起以创建一个新的 Rectangle 对象。
          * @param toUnion 要添加到此 Rectangle 对象的 Rectangle 对象。
          * @returns 充当两个矩形的联合的新 Rectangle 对象。
          */
-        union(toUnion) {
-            let result = this.clone();
-            if (toUnion.isEmpty()) {
-                return result;
-            }
-            if (result.isEmpty()) {
-                result.copyFrom(toUnion);
-                return result;
-            }
-            let l = Math.min(result.x, toUnion.x);
-            let t = Math.min(result.y, toUnion.y);
-            result.setTo(l, t, Math.max(result.right, toUnion.right) - l, Math.max(result.bottom, toUnion.bottom) - t);
-            return result;
-        }
+        union(toUnion: Rectangle): Rectangle;
         /**
          * @private
          */
-        $getBaseWidth(angle) {
-            let u = Math.abs(Math.cos(angle));
-            let v = Math.abs(Math.sin(angle));
-            return u * this.width + v * this.height;
-        }
+        $getBaseWidth(angle: number): number;
         /**
          * @private
          */
-        $getBaseHeight(angle) {
-            let u = Math.abs(Math.cos(angle));
-            let v = Math.abs(Math.sin(angle));
-            return v * this.width + u * this.height;
-        }
+        $getBaseHeight(angle: number): number;
     }
-    math.Rectangle = Rectangle;
     /**
      * @private
      * 仅供框架内复用，要防止暴露引用到外部。
      */
-    math.$TempRectangle = new Rectangle();
-})(math || (math = {}));
-var display;
-(function (display) {
-    var Rectangle = math.Rectangle;
+    let $TempRectangle: Rectangle;
+}
+declare module display {
+    import Rectangle = math.Rectangle;
     class DisplayObject {
-        constructor() {
-            this.x = 0;
-            this.y = 0;
-            this.scaleX = 1;
-            this.scaleY = 1;
-            this._viewport = new Rectangle();
-        }
-        render(ctx, x, y) {
-        }
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        scaleX: number;
+        scaleY: number;
+        protected _viewport: Rectangle;
+        constructor();
+        render(ctx: any, x: any, y: any): void;
     }
-    display.DisplayObject = DisplayObject;
-})(display || (display = {}));
-var display;
-(function (display) {
-    class DisplayObjectContainer extends display.DisplayObject {
-        constructor() {
-            super();
-            this._children = [];
-        }
-        get numChildren() {
-            return this._children.length;
-        }
-        get getChildren() {
-            return this._children;
-        }
-        addChild(child) {
-            this._children.push(child);
-        }
-        removeChildAt(index) {
-            if (index >= 0 && index < this._children.length) {
-                var child = this._children[index];
-                // child.setParent(null);
-                index = this._children.indexOf(child); // index might have changed by event handler
-                if (index >= 0)
-                    this._children.splice(index, 1);
-                // if (dispose) child.dispose();
-                return child;
-            }
-            else {
-                throw new RangeError('Invalid child index');
-            }
-        }
-        removeChildren() {
-            this._children.length = 0;
-        }
-        render(ctx, x, y) {
-            let len = this._children.length;
-            for (let index = 0; index < len; index++) {
-                const element = this._children[index];
-                element.render(ctx, this.x + x, this.y + y);
-            }
-        }
+}
+declare module display {
+    class DisplayObjectContainer extends DisplayObject {
+        private _children;
+        constructor();
+        readonly numChildren: number;
+        readonly getChildren: Array<DisplayObject>;
+        addChild(child: DisplayObject): void;
+        removeChildAt(index: number): DisplayObject;
+        removeChildren(): void;
+        render(ctx: any, x: any, y: any): void;
     }
-    display.DisplayObjectContainer = DisplayObjectContainer;
-})(display || (display = {}));
-var display;
-(function (display) {
-    var DisplayObjectContainer = display.DisplayObjectContainer;
-    var Rectangle = math.Rectangle;
-    var GlobalData = common.GlobalData;
+}
+declare module display {
+    import DisplayObjectContainer = display.DisplayObjectContainer;
+    import Rectangle = math.Rectangle;
     class Stage extends DisplayObjectContainer {
-        constructor() {
-            super();
-            this.x = (GlobalData.ScreenWidth - GlobalData.StageWidth) * 0.5;
-            this.y = (GlobalData.ScreenHeight - GlobalData.StageHeight) * 0.5;
-            this.width = GlobalData.StageWidth;
-            this.height = GlobalData.StageHeight;
-            Stage.viewport = new Rectangle(this.x, this.y, this.width, this.height);
-        }
-        static instance() {
-            if (!Stage._instance) {
-                this._instance = new Stage();
-            }
-            return this._instance;
-        }
+        private static _instance;
+        static viewport: Rectangle;
+        constructor();
+        static instance(): Stage;
     }
-    display.Stage = Stage;
-})(display || (display = {}));
-var display;
-(function (display) {
-    var Stage = display.Stage;
-    class Bitmap extends display.DisplayObject {
-        constructor(imgSrc) {
-            super();
-            this._img = new Image();
-            this._img.src = imgSrc;
-            this._img.onload = () => {
-                this.width = this.width === undefined ? this._img.width : this.width;
-                this.height = this.height === undefined ? this._img.height : this.height;
-            };
-        }
-        render(ctx, parentX, parentY) {
-            this._viewport.setTo(parentX + this.x, parentY + this.y, this.width, this.height);
-            var parentViewport = Stage.viewport;
-            if (this._viewport.left > parentViewport.right ||
-                this._viewport.right < parentViewport.left ||
-                this._viewport.top > parentViewport.bottom ||
-                this._viewport.bottom < parentViewport.top)
-                return;
-            if (parentViewport.containsRect(this._viewport)) {
-                // ctx.drawImage(this._img, 0, 0, this._viewport.width, this._viewport.height, this._viewport.x, this._viewport.y, this._viewport.width, this._viewport.height);
-                this.drawImage(ctx, 0, 0, this._viewport.width, this._viewport.height, this._viewport.x, this._viewport.y, this._viewport.width, this._viewport.height);
-                return;
-            }
-            let sx, sy, sWidth, sHeight;
-            let dx, dy, dWidth, dHeight;
-            if (this._viewport.left < parentViewport.left) {
-                sx = parentViewport.left - this._viewport.left;
-                dx = parentViewport.left;
-                sWidth = dWidth = this._viewport.right - parentViewport.left;
-            }
-            else {
-                sx = 0;
-                dx = this._viewport.x;
-                sWidth = dWidth = this._viewport.width;
-            }
-            if (this._viewport.top < parentViewport.top) {
-                sy = parentViewport.top - this._viewport.top;
-                dy = parentViewport.top;
-                sHeight = dHeight = this._viewport.bottom - parentViewport.top;
-            }
-            else {
-                sy = 0;
-                dy = this._viewport.y;
-                sHeight = dHeight = this._viewport.height;
-            }
-            if (this._viewport.right > parentViewport.right) {
-                sWidth = dWidth = parentViewport.right - this._viewport.left;
-            }
-            if (this._viewport.bottom > parentViewport.bottom) {
-                sHeight = dHeight = parentViewport.bottom - this._viewport.top;
-            }
-            // ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-            this.drawImage(ctx, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-        }
-        drawImage(ctx, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
-            if (this.scaleX !== 1 || this.scaleY !== 1) {
-                ctx.translate(0, dHeight + Stage.viewport.y * 2);
-                ctx.scale(this.scaleX, this.scaleY);
-                ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                return;
-            }
-            ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-        }
+}
+declare module display {
+    class Bitmap extends DisplayObject {
+        private _img;
+        constructor(imgSrc: string);
+        render(ctx: any, parentX: any, parentY: any): void;
+        private drawImage(ctx, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
     }
-    display.Bitmap = Bitmap;
-})(display || (display = {}));
+}
 /**
  * Created by cjb on 2018-04-29
  */
-var common;
-(function (common) {
+declare module common {
     class GlobalData {
+        static ScreenWidth: number;
+        static ScreenHeight: number;
+        static StageWidth: number;
+        static StageHeight: number;
     }
-    common.GlobalData = GlobalData;
-})(common || (common = {}));
+}
 /**
  * Created by cjb on 2018-04-30
  */
-var GlobalData = common.GlobalData;
-function init(stageW, stageH, ScreenW, ScreenH) {
-    GlobalData.StageWidth = stageW;
-    GlobalData.ScreenHeight = stageH;
-    GlobalData.ScreenWidth = ScreenW ? ScreenW : stageW;
-    GlobalData.ScreenHeight = ScreenH ? ScreenH : stageH;
-}
-var manager;
-(function (manager) {
+import GlobalData = common.GlobalData;
+declare function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void;
+declare module manager {
     /**
      * 帧运算管理器
      * 负责管理所有注册对象的enterFrame函数，对每帧一定要计算的和卡的时候可以跳帧的进行区分处理
@@ -502,20 +238,27 @@ var manager;
      *
      */
     class FrameManager {
-        static start() {
-            if (FrameManager._fps !== undefined)
-                return;
-            FrameManager._fps = 60;
-            FrameManager._spf = 1000 / FrameManager._fps;
-            const LOWEST = 24; // 至少保证不低于多少帧数
-            for (var i = 0; i < 3; i++) {
-                FrameManager._processList[i] = {};
-                FrameManager._priorityTime[i] = 1000 / (LOWEST - i * LOWEST / 3);
-            }
-            FrameManager._frameCount = 0;
-            FrameManager._lastFrameTimestamp = Date.now();
-            window.requestAnimationFrame(FrameManager.onEnterFrame.bind(this));
-        }
+        static readonly REAL_TIME: number;
+        static readonly NORMAL: number;
+        static readonly IDLE: number;
+        static frameRate: number;
+        private static _deltaTime;
+        private static _isInterpolation;
+        private static _fps;
+        private static _spf;
+        private static _processList;
+        private static _priorityTime;
+        private static _lastFrameTimestamp;
+        private static _time;
+        private static _currentFrameTime;
+        private static _serverTime;
+        private static readonly SAMPLE_COUNT;
+        private static _frameCount;
+        private static _frameScore;
+        private static _frameAvgScoreIndex;
+        private static _frameAvgScore;
+        private static _lastScoreTime;
+        static start(): void;
         /**
          * 注册每帧运行函数
          * 由于使用Dictionary，所以先加入的函数并不一定会先运行
@@ -523,93 +266,22 @@ var manager;
          * @param priority 优先级，默认为FrameManager.NORMAL
          *
          */
-        static add(key, process, thisObject, priority = FrameManager.NORMAL) {
-            if (FrameManager._processList[priority][key] !== undefined)
-                throw new Error("已经注册过process");
-            FrameManager._processList[priority][key] = process.bind(thisObject);
-        }
+        static add(key: string, process: Function, thisObject: any, priority?: number): void;
         /**
          * 移除每帧运行函数
          * @param process 处理函数
          */
-        static remove(key) {
-            for (var i = 0; i < FrameManager._processList.length; i++) {
-                if (FrameManager._processList[i][key] !== undefined) {
-                    delete FrameManager._processList[i][key];
-                    break;
-                }
-            }
-        }
-        // 进入帧时候触发事件        
-        static onEnterFrame() {
-            var now = Date.now();
-            var passedTime = now - FrameManager._lastFrameTimestamp; // 上一帧到当前帧所经过的时间
-            FrameManager._time += passedTime * FrameManager.frameRate;
-            FrameManager._serverTime += passedTime;
-            FrameManager._frameCount++;
-            FrameManager.process(passedTime, passedTime, 1);
-            // 经过process后的时间
-            FrameManager._currentFrameTime = Date.now() - FrameManager._lastFrameTimestamp;
-            FrameManager._lastFrameTimestamp = now;
-            window.requestAnimationFrame(FrameManager.onEnterFrame.bind(this));
-        }
-        static process(passedTime, processTime, funRepeatTime) {
-            FrameManager._deltaTime = processTime;
-            // 实时每帧都运行
-            for (let key in FrameManager._processList[FrameManager.REAL_TIME]) {
-                FrameManager.callbackHandler(FrameManager._processList[FrameManager.REAL_TIME][key], processTime);
-            }
-            for (var i = FrameManager.NORMAL; i >= FrameManager.IDLE; --i) {
-                if (passedTime > FrameManager._priorityTime[i]) // 跳帧处理
-                 {
-                    if (funRepeatTime <= 1) // funRepeatTime>1 表示帧补偿，帧补偿时不跳帧
-                        continue;
-                }
-                for (let key in FrameManager._processList[i]) {
-                    FrameManager.callbackHandler(FrameManager._processList[i][key], processTime);
-                }
-            }
-        }
-        static callbackHandler(callback, passedTime) {
-            if (callback.length == 0)
-                callback();
-            else if (callback.length == 1)
-                callback(passedTime);
-            else if (callback.length == 2)
-                callback(FrameManager._time, passedTime);
-            else
-                throw new Error();
-        }
+        static remove(key: string): void;
+        private static onEnterFrame();
+        private static process(passedTime, processTime, funRepeatTime);
+        private static callbackHandler(callback, passedTime);
         /**
          * 启动FrameManager以来经过的毫秒数
          */
-        static get time() {
-            return FrameManager._time;
-        }
+        static readonly time: number;
     }
-    FrameManager.REAL_TIME = 2;
-    FrameManager.NORMAL = 1;
-    FrameManager.IDLE = 0;
-    FrameManager.frameRate = 1; // 帧速度
-    FrameManager._deltaTime = 0; // 表示从上一帧到当前帧时间，以毫秒为单位。
-    FrameManager._isInterpolation = false; // 帧补偿中
-    FrameManager._processList = []; // 处理函数列表
-    FrameManager._priorityTime = []; // 优先级时间，用于跳帧处理
-    FrameManager._lastFrameTimestamp = 0; // 上一帧启动 Flash 运行时虚拟计算机以来经过的毫秒数
-    FrameManager._time = 0.0; // 启动FrameManager以来经过的毫秒数
-    FrameManager._serverTime = 0; // 服务器时间
-    // 计算分数
-    FrameManager.SAMPLE_COUNT = 10; // 间隔几帧计算帧分数
-    FrameManager._frameAvgScoreIndex = 0;
-    FrameManager._frameAvgScore = []; // 平均帧分数
-    manager.FrameManager = FrameManager;
-})(manager || (manager = {}));
-var math;
-(function (math) {
-    let PI = Math.PI;
-    let TwoPI = PI * 2;
-    let DEG_TO_RAD = PI / 180;
-    let matrixPool = [];
+}
+declare module math {
     /**
      * The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to
      * another. You can perform various graphical transformations on a display object by setting the properties of a Matrix
@@ -630,6 +302,34 @@ var math;
      * @language zh_CN
      */
     class Matrix {
+        /**
+         * Releases a matrix instance to the object pool
+         * @param matrix matrix that Needs to be recycled
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language en_US
+         */
+        /**
+         * 释放一个Matrix实例到对象池
+         * @param matrix 需要回收的 matrix
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language zh_CN
+         */
+        static release(matrix: Matrix): void;
+        /**
+         * get a matrix instance from the object pool or create a new one.
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language en_US
+         */
+        /**
+         * 从对象池中取出或创建一个新的Matrix对象。
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language zh_CN
+         */
+        static create(): Matrix;
         /**
          * Creates a new Matrix object with the specified parameters.
          * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
@@ -654,53 +354,97 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        constructor(a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.tx = tx;
-            this.ty = ty;
-        }
+        constructor(a?: number, b?: number, c?: number, d?: number, tx?: number, ty?: number);
         /**
-         * Releases a matrix instance to the object pool
-         * @param matrix matrix that Needs to be recycled
+         * The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
+         * @default 1
          * @version Egret 2.4
          * @platform Web,Native
          * @language en_US
          */
         /**
-         * 释放一个Matrix实例到对象池
-         * @param matrix 需要回收的 matrix
+         * 缩放或旋转图像时影响像素沿 x 轴定位的值
+         * @default 1
          * @version Egret 2.4
          * @platform Web,Native
          * @language zh_CN
          */
-        static release(matrix) {
-            if (!matrix) {
-                return;
-            }
-            matrixPool.push(matrix);
-        }
+        a: number;
         /**
-         * get a matrix instance from the object pool or create a new one.
+         * The value that affects the positioning of pixels along the y axis when rotating or skewing an image.
+         * @default 0
          * @version Egret 2.4
          * @platform Web,Native
          * @language en_US
          */
         /**
-         * 从对象池中取出或创建一个新的Matrix对象。
+         * 旋转或倾斜图像时影响像素沿 y 轴定位的值
+         * @default 0
          * @version Egret 2.4
          * @platform Web,Native
          * @language zh_CN
          */
-        static create() {
-            let matrix = matrixPool.pop();
-            if (!matrix) {
-                matrix = new Matrix();
-            }
-            return matrix;
-        }
+        b: number;
+        /**
+         * The value that affects the positioning of pixels along the x axis when rotating or skewing an image.
+         * @default 0
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language en_US
+         */
+        /**
+         * 旋转或倾斜图像时影响像素沿 x 轴定位的值
+         * @default 0
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language zh_CN
+         */
+        c: number;
+        /**
+         * The value that affects the positioning of pixels along the y axis when scaling or rotating an image.
+         * @default 1
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language en_US
+         */
+        /**
+         * 缩放或旋转图像时影响像素沿 y 轴定位的值
+         * @default 1
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language zh_CN
+         */
+        d: number;
+        /**
+         * The distance by which to translate each point along the x axis.
+         * @default 0
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language en_US
+         */
+        /**
+         * 沿 x 轴平移每个点的距离
+         * @default 0
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language zh_CN
+         */
+        tx: number;
+        /**
+         * The distance by which to translate each point along the y axis.
+         * @default 0
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language en_US
+         */
+        /**
+         * 沿 y 轴平移每个点的距离
+         * @default 0
+         * @version Egret 2.4
+         * @platform Web,Native
+         * @language zh_CN
+         */
+        ty: number;
         /**
          * Returns a new Matrix object that is a clone of this matrix, with an exact copy of the contained object.
          * @version Egret 2.4
@@ -713,9 +457,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        clone() {
-            return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
-        }
+        clone(): Matrix;
         /**
          * Concatenates a matrix with the current matrix, effectively combining the geometric effects of the two. In mathematical
          * terms, concatenating two matrixes is the same as combining them using matrix multiplication.
@@ -731,28 +473,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        concat(other) {
-            let a = this.a * other.a;
-            let b = 0.0;
-            let c = 0.0;
-            let d = this.d * other.d;
-            let tx = this.tx * other.a + other.tx;
-            let ty = this.ty * other.d + other.ty;
-            if (this.b !== 0.0 || this.c !== 0.0 || other.b !== 0.0 || other.c !== 0.0) {
-                a += this.b * other.c;
-                d += this.c * other.b;
-                b += this.a * other.b + this.b * other.d;
-                c += this.c * other.a + this.d * other.c;
-                tx += this.ty * other.c;
-                ty += this.tx * other.b;
-            }
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.tx = tx;
-            this.ty = ty;
-        }
+        concat(other: Matrix): void;
         /**
          * Copies all of the matrix data from the source Point object into the calling Matrix object.
          * @param other  The Matrix object from which to copy the data.
@@ -767,15 +488,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        copyFrom(other) {
-            this.a = other.a;
-            this.b = other.b;
-            this.c = other.c;
-            this.d = other.d;
-            this.tx = other.tx;
-            this.ty = other.ty;
-            return this;
-        }
+        copyFrom(other: Matrix): Matrix;
         /**
          * Sets each matrix property to a value that causes a null transformation. An object transformed by applying an
          * identity matrix will be identical to the original. After calling the identity() method, the resulting matrix
@@ -791,10 +504,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        identity() {
-            this.a = this.d = 1;
-            this.b = this.c = this.tx = this.ty = 0;
-        }
+        identity(): void;
         /**
          * Performs the opposite transformation of the original matrix. You can apply an inverted matrix to an object to
          * undo the transformation performed when applying the original matrix.
@@ -809,45 +519,11 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        invert() {
-            this.$invertInto(this);
-        }
+        invert(): void;
         /**
          * @private
          */
-        $invertInto(target) {
-            let a = this.a;
-            let b = this.b;
-            let c = this.c;
-            let d = this.d;
-            let tx = this.tx;
-            let ty = this.ty;
-            if (b == 0 && c == 0) {
-                target.b = target.c = 0;
-                if (a == 0 || d == 0) {
-                    target.a = target.d = target.tx = target.ty = 0;
-                }
-                else {
-                    a = target.a = 1 / a;
-                    d = target.d = 1 / d;
-                    target.tx = -a * tx;
-                    target.ty = -d * ty;
-                }
-                return;
-            }
-            let determinant = a * d - b * c;
-            if (determinant == 0) {
-                target.identity();
-                return;
-            }
-            determinant = 1 / determinant;
-            let k = target.a = d * determinant;
-            b = target.b = -b * determinant;
-            c = target.c = -c * determinant;
-            d = target.d = a * determinant;
-            target.tx = -(k * tx + c * ty);
-            target.ty = -(b * tx + d * ty);
-        }
+        $invertInto(target: Matrix): void;
         /**
          * Applies a rotation transformation to the Matrix object.
          * The rotate() method alters the a, b, c, and d properties of the Matrix object.
@@ -864,26 +540,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        rotate(angle) {
-            angle = +angle;
-            if (angle !== 0) {
-                angle = angle / DEG_TO_RAD;
-                let u = Math.cos(angle);
-                let v = Math.sin(angle);
-                let ta = this.a;
-                let tb = this.b;
-                let tc = this.c;
-                let td = this.d;
-                let ttx = this.tx;
-                let tty = this.ty;
-                this.a = ta * u - tb * v;
-                this.b = ta * v + tb * u;
-                this.c = tc * u - td * v;
-                this.d = tc * v + td * u;
-                this.tx = ttx * u - tty * v;
-                this.ty = ttx * v + tty * u;
-            }
-        }
+        rotate(angle: number): void;
         /**
          * Applies a scaling transformation to the matrix. The x axis is multiplied by sx, and the y axis it is multiplied by sy.
          * The scale() method alters the a and d properties of the Matrix object.
@@ -902,18 +559,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        scale(sx, sy) {
-            if (sx !== 1) {
-                this.a *= sx;
-                this.c *= sx;
-                this.tx *= sx;
-            }
-            if (sy !== 1) {
-                this.b *= sy;
-                this.d *= sy;
-                this.ty *= sy;
-            }
-        }
+        scale(sx: number, sy: number): void;
         /**
          * Sets the members of Matrix to the specified values
          * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
@@ -938,15 +584,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        setTo(a, b, c, d, tx, ty) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.tx = tx;
-            this.ty = ty;
-            return this;
-        }
+        setTo(a: number, b: number, c: number, d: number, tx: number, ty: number): Matrix;
         /**
          * Returns the result of applying the geometric transformation represented by the Matrix object to the specified point.
          * @param pointX The x coordinate for which you want to get the result of the Matrix transformation.
@@ -974,10 +612,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        translate(dx, dy) {
-            this.tx += dx;
-            this.ty += dy;
-        }
+        translate(dx: number, dy: number): void;
         /**
          * Determines whether two matrixes are equal.
          * @param other The matrix to be compared.
@@ -994,11 +629,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        equals(other) {
-            return this.a == other.a && this.b == other.b &&
-                this.c == other.c && this.d == other.d &&
-                this.tx == other.tx && this.ty == other.ty;
-        }
+        equals(other: Matrix): boolean;
         /**
          * prepend matrix
          * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
@@ -1025,20 +656,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        prepend(a, b, c, d, tx, ty) {
-            let tx1 = this.tx;
-            if (a != 1 || b != 0 || c != 0 || d != 1) {
-                let a1 = this.a;
-                let c1 = this.c;
-                this.a = a1 * a + this.b * c;
-                this.b = a1 * b + this.b * d;
-                this.c = c1 * a + this.d * c;
-                this.d = c1 * b + this.d * d;
-            }
-            this.tx = tx1 * a + this.ty * c + tx;
-            this.ty = tx1 * b + this.ty * d + ty;
-            return this;
-        }
+        prepend(a: number, b: number, c: number, d: number, tx: number, ty: number): Matrix;
         /**
          * append matrix
          * @param a The value that affects the positioning of pixels along the x axis when scaling or rotating an image.
@@ -1065,21 +683,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        append(a, b, c, d, tx, ty) {
-            let a1 = this.a;
-            let b1 = this.b;
-            let c1 = this.c;
-            let d1 = this.d;
-            if (a != 1 || b != 0 || c != 0 || d != 1) {
-                this.a = a * a1 + b * c1;
-                this.b = a * b1 + b * d1;
-                this.c = c * a1 + d * c1;
-                this.d = c * b1 + d * d1;
-            }
-            this.tx = tx * a1 + ty * c1 + this.tx;
-            this.ty = tx * b1 + ty * d1 + this.ty;
-            return this;
-        }
+        append(a: number, b: number, c: number, d: number, tx: number, ty: number): Matrix;
         /**
          * Given a point in the pretransform coordinate space, returns the coordinates of that point after the transformation occurs.
          * Unlike the standard transformation applied using the transformPoint() method, the deltaTransformPoint() method's transformation does not consider the translation parameters tx and ty.
@@ -1103,9 +707,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        toString() {
-            return "(a=" + this.a + ", b=" + this.b + ", c=" + this.c + ", d=" + this.d + ", tx=" + this.tx + ", ty=" + this.ty + ")";
-        }
+        toString(): string;
         /**
          * Includes parameters for scaling, rotation, and translation. When applied to a matrix it sets the matrix's values based on those parameters.
          * @param scaleX The factor by which to scale horizontally.
@@ -1132,141 +734,96 @@ var math;
         /**
          * @private
          */
-        getDeterminant() {
-            return this.a * this.d - this.b * this.c;
-        }
+        private getDeterminant();
         /**
          * @private
          */
-        $getScaleX() {
-            let m = this;
-            if (m.a == 1 && m.b == 0) {
-                return 1;
-            }
-            let result = Math.sqrt(m.a * m.a + m.b * m.b);
-            return this.getDeterminant() < 0 ? -result : result;
-        }
+        $getScaleX(): number;
         /**
          * @private
          */
-        $getScaleY() {
-            let m = this;
-            if (m.c == 0 && m.d == 1) {
-                return 1;
-            }
-            let result = Math.sqrt(m.c * m.c + m.d * m.d);
-            return this.getDeterminant() < 0 ? -result : result;
-        }
+        $getScaleY(): number;
         /**
          * @private
          */
-        $getSkewX() {
-            return Math.atan2(this.d, this.c) - (PI / 2);
-        }
+        $getSkewX(): number;
         /**
          * @private
          */
-        $getSkewY() {
-            return Math.atan2(this.b, this.a);
-        }
+        $getSkewY(): number;
     }
-    math.Matrix = Matrix;
     /**
      * @private
      * 仅供框架内复用，要防止暴露引用到外部。
      */
-    math.$TempMatrix = new Matrix();
-})(math || (math = {}));
-var math;
-(function (math) {
-    let pointPool = [];
-    let DEG_TO_RAD = Math.PI / 180;
+    let $TempMatrix: Matrix;
+}
+declare module math {
     /**
      * Point 对象表示二维坐标系统中的某个位置，其中 x 表示水平轴，y 表示垂直轴。
      */
     class Point {
-        /**
-         * 创建一个 egret.Point 对象.若不传入任何参数，将会创建一个位于（0，0）位置的点。
-         * @param x 该对象的x属性值，默认为0
-         * @param y 该对象的y属性值，默认为0
-         */
-        constructor(x = 0, y = 0) {
-            this.x = x;
-            this.y = y;
-        }
-        static release(point) {
-            if (!point) {
-                return;
-            }
-            pointPool.push(point);
-        }
+        static release(point: Point): void;
         /**
          * 从对象池中取出或创建一个新的Point对象。
          * @param x 该对象的x属性值，默认为0
          * @param y 该对象的y属性值，默认为0
          */
-        static create(x, y) {
-            let point = pointPool.pop();
-            if (!point) {
-                point = new Point();
-            }
-            return point.setTo(x, y);
-        }
+        static create(x: number, y: number): Point;
+        /**
+         * 创建一个 egret.Point 对象.若不传入任何参数，将会创建一个位于（0，0）位置的点。
+         * @param x 该对象的x属性值，默认为0
+         * @param y 该对象的y属性值，默认为0
+         */
+        constructor(x?: number, y?: number);
+        /**
+         * 该点的水平坐标。
+         * @default 0
+         */
+        x: number;
+        /**
+         * 该点的垂直坐标。
+         * @default 0
+         */
+        y: number;
         /**
          * 从 (0,0) 到此点的线段长度。
          */
-        get length() {
-            return Math.sqrt(this.x * this.x + this.y * this.y);
-        }
+        readonly length: number;
         /**
          * 将 Point 的成员设置为指定值
          * @param x 该对象的x属性值
          * @param y 该对象的y属性值
          */
-        setTo(x, y) {
-            this.x = x;
-            this.y = y;
-            return this;
-        }
+        setTo(x: number, y: number): Point;
         /**
          * 克隆点对象
          */
-        clone() {
-            return new Point(this.x, this.y);
-        }
+        clone(): Point;
         /**
          * 确定两个点是否相同。如果两个点具有相同的 x 和 y 值，则它们是相同的点。
          * @param toCompare 要比较的点。
          * @returns 如果该对象与此 Point 对象相同，则为 true 值，如果不相同，则为 false。
          */
-        equals(toCompare) {
-            return this.x == toCompare.x && this.y == toCompare.y;
-        }
+        equals(toCompare: Point): boolean;
         /**
          * 返回 pt1 和 pt2 之间的距离。
          * @param p1 第一个点
          * @param p2 第二个点
          * @returns 第一个点和第二个点之间的距离。
          */
-        static distance(p1, p2) {
-            return Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
-        }
+        static distance(p1: Point, p2: Point): number;
         /**
          * 将源 Point 对象中的所有点数据复制到调用方 Point 对象中。
          * @param sourcePoint 要从中复制数据的 Point 对象。
          */
-        copyFrom(sourcePoint) {
-            this.x = sourcePoint.x;
-            this.y = sourcePoint.y;
-        }
+        copyFrom(sourcePoint: Point): void;
         /**
          * 将另一个点的坐标添加到此点的坐标以创建一个新点。
          * @param v 要添加的点。
          * @returns 新点。
          */
-        add(v) {
-            return new Point(this.x + v.x, this.y + v.y);
-        }
+        add(v: Point): Point;
         /**
          * 确定两个指定点之间的点。
          * 参数 f 确定新的内插点相对于参数 pt1 和 pt2 指定的两个端点所处的位置。参数 f 的值越接近 1.0，则内插点就越接近第一个点（参数 pt1）。参数 f 的值越接近 0，则内插点就越接近第二个点（参数 pt2）。
@@ -1274,38 +831,24 @@ var math;
          * @param pt2 第二个点。
          * @param f 两个点之间的内插级别。表示新点将位于 pt1 和 pt2 连成的直线上的什么位置。如果 f=1，则返回 pt1；如果 f=0，则返回 pt2。
          */
-        static interpolate(pt1, pt2, f) {
-            let f1 = 1 - f;
-            return new Point(pt1.x * f + pt2.x * f1, pt1.y * f + pt2.y * f1);
-        }
+        static interpolate(pt1: Point, pt2: Point, f: number): Point;
         /**
          * 将 (0,0) 和当前点之间的线段缩放为设定的长度。
          * @param thickness 缩放值。例如，如果当前点为 (0,5) 并且您将它规范化为 1，则返回的点位于 (0,1) 处。
          */
-        normalize(thickness) {
-            if (this.x != 0 || this.y != 0) {
-                let relativeThickness = thickness / this.length;
-                this.x *= relativeThickness;
-                this.y *= relativeThickness;
-            }
-        }
+        normalize(thickness: number): void;
         /**
          * 按指定量偏移 Point 对象。dx 的值将添加到 x 的原始值中以创建新的 x 值。dy 的值将添加到 y 的原始值中以创建新的 y 值。
          * @param dx 水平坐标 x 的偏移量。
          * @param dy 水平坐标 y 的偏移量。
          */
-        offset(dx, dy) {
-            this.x += dx;
-            this.y += dy;
-        }
+        offset(dx: number, dy: number): void;
         /**
          * 将一对极坐标转换为笛卡尔点坐标。
          * @param len 极坐标对的长度。
          * @param angle 极坐标对的角度（以弧度表示）。
          */
-        static polar(len, angle) {
-            return new Point(len * math.NumberUtils.cos(angle / DEG_TO_RAD), len * math.NumberUtils.sin(angle / DEG_TO_RAD));
-        }
+        static polar(len: number, angle: number): Point;
         /**
          * 从此点的坐标中减去另一个点的坐标以创建一个新点。
          * @param v 要减去的点。
@@ -1314,9 +857,7 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        subtract(v) {
-            return new Point(this.x - v.x, this.y - v.y);
-        }
+        subtract(v: Point): Point;
         /**
          * 返回包含 x 和 y 坐标的值的字符串。该字符串的格式为 "(x=x, y=y)"，因此为点 23,17 调用 toString() 方法将返回 "(x=23, y=17)"。
          * @returns 坐标的字符串表示形式。
@@ -1324,50 +865,29 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        toString() {
-            return "(x=" + this.x + ", y=" + this.y + ")";
-        }
+        toString(): string;
     }
-    math.Point = Point;
     /**
      * @private
      * 仅供框架内复用，要防止暴露引用到外部。
      */
-    math.$TempPoint = new Point();
-})(math || (math = {}));
-var math;
-(function (math) {
+    let $TempPoint: Point;
+}
+declare module math {
     class NumberUtils {
         /**
          * 判断是否是数值
          * @param value 需要判断的参数
          * @returns
          */
-        static isNumber(value) {
-            return typeof (value) === "number" && !isNaN(value);
-        }
+        static isNumber(value: any): boolean;
         /**
          * 得到对应角度值的sin近似值
          * @param value {number} 角度值
          * @returns {number} sin值
          */
-        static sin(value) {
-            let valueFloor = Math.floor(value);
-            let valueCeil = valueFloor + 1;
-            let resultFloor = NumberUtils.sinInt(valueFloor);
-            if (valueFloor == value) {
-                return resultFloor;
-            }
-            let resultCeil = NumberUtils.sinInt(valueCeil);
-            return (value - valueFloor) * resultCeil + (valueCeil - value) * resultFloor;
-        }
-        static sinInt(value) {
-            value = value % 360;
-            if (value < 0) {
-                value += 360;
-            }
-            return egret_sin_map[value];
-        }
+        static sin(value: number): number;
+        private static sinInt(value);
         /**
          * 得到对应角度值的cos近似值
          * @param value {number} 角度值
@@ -1376,90 +896,34 @@ var math;
          * @platform Web,Native
          * @language zh_CN
          */
-        static cos(value) {
-            let valueFloor = Math.floor(value);
-            let valueCeil = valueFloor + 1;
-            let resultFloor = NumberUtils.cosInt(valueFloor);
-            if (valueFloor == value) {
-                return resultFloor;
-            }
-            let resultCeil = NumberUtils.cosInt(valueCeil);
-            return (value - valueFloor) * resultCeil + (valueCeil - value) * resultFloor;
-        }
+        static cos(value: number): number;
         /**
          * @private
          *
          * @param value
          * @returns
          */
-        static cosInt(value) {
-            value = value % 360;
-            if (value < 0) {
-                value += 360;
-            }
-            return egret_cos_map[value];
-        }
+        private static cosInt(value);
     }
-    math.NumberUtils = NumberUtils;
-})(math || (math = {}));
-/**
- * @private
- */
-let egret_sin_map = {};
-/**
- * @private
- */
-let egret_cos_map = {};
-/**
- * @private
- */
-let DEG_TO_RAD = Math.PI / 180;
-for (let NumberUtils_i = 0; NumberUtils_i < 360; NumberUtils_i++) {
-    egret_sin_map[NumberUtils_i] = Math.sin(NumberUtils_i * DEG_TO_RAD);
-    egret_cos_map[NumberUtils_i] = Math.cos(NumberUtils_i * DEG_TO_RAD);
 }
-egret_sin_map[90] = 1;
-egret_cos_map[90] = 0;
-egret_sin_map[180] = 0;
-egret_cos_map[180] = -1;
-egret_sin_map[270] = -1;
-egret_cos_map[270] = 0;
-//对未提供bind的浏览器实现bind机制
-if (!Function.prototype.bind) {
-    Function.prototype.bind = function (oThis) {
-        if (typeof this !== "function") {
-            // closest thing possible to the ECMAScript 5 internal IsCallable function
-            //egret.$error(1029);
-            console.error(1029);
-        }
-        let aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () {
-        }, fBound = function () {
-            return fToBind.apply(this instanceof fNOP && oThis
-                ? this
-                : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
-        };
-        fNOP.prototype = this.prototype;
-        fBound.prototype = new fNOP();
-        return fBound;
-    };
-}
+/**
+ * @private
+ */
+declare let egret_sin_map: {};
+/**
+ * @private
+ */
+declare let egret_cos_map: {};
+/**
+ * @private
+ */
+declare let DEG_TO_RAD: number;
 /**
  * Created by cjb on 2018-04-30
  */
-var utils;
-(function (utils) {
+declare module utils {
     class Vo {
-        static clone(vo1, vo2) {
-            for (var propName in vo1) {
-                vo2[propName] = vo1[propName];
-            }
-            return vo2;
-        }
-        clone(vo) {
-            return Vo.clone(this, vo);
-        }
+        static clone(vo1: Vo, vo2: Vo): Vo;
+        clone(vo: Vo): Vo;
     }
-    utils.Vo = Vo;
-})(utils || (utils = {}));
-
-//# sourceMappingURL=vejay.js.map
+}
