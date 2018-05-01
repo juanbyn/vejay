@@ -15,8 +15,11 @@ module core {
         
         public get values(): Array<any> {
             var arr = [];
-            for (var value of this._obj) {
-                arr.push(value);
+            // for (var value of this._obj) {
+            //     arr.push(value);
+            // }
+            for (var key in this._obj) {
+                arr.push(this._obj[key]);
             }
             return arr;
         }

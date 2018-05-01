@@ -2,6 +2,7 @@
  * Created by cjb on 2018-04-30
  */
 import GlobalData = common.GlobalData;
+import Font = core.base.Font;
 
 function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void {
     GlobalData.StageWidth = stageW;
@@ -9,15 +10,9 @@ function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number
     GlobalData.ScreenWidth = ScreenW ? ScreenW : stageW;
     GlobalData.ScreenHeight = ScreenH ? ScreenH : stageH;
     
-    var canvas = wx.createCanvas();
-    var renderContext = canvas.getContext("webgl");
-    
-    if (renderContext) {
-        GlobalData.Ctx = renderContext;
-    } else {
-        GlobalData.Ctx = canvas.getContext("2d");
-        GlobalData.CtxType = 1;
-    }
+    new core.base.Init();
 }
 
-
+function setFont(font: string) {
+    Font.instance.setFont(font);
+}

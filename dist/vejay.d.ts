@@ -1,3 +1,70 @@
+/**
+ * Created by cjb on 2018-05-01
+ */
+declare module core {
+    class Dictionary {
+        private _obj;
+        readonly keys: Array<string>;
+        readonly values: Array<any>;
+        set(key: string, value: any): void;
+        get(key: string): any;
+        has(key: string): boolean;
+        remove(key: string): void;
+        clear(): void;
+    }
+}
+/**
+ * Created by cjb on 2018-05-01
+ */
+declare module core {
+    class EventDispatcher {
+        private static _list;
+        /**
+         * 添加事件监听
+         * @param {string} name 事件名称
+         * @param caller 执行域
+         * @param {Function} method 方法
+         * @param {Array<any>} args [参数]
+         * @param {boolean} once 是否只执行一次
+         */
+        addEventListener(name: string, caller: any, method: Function, args: Array<any>, once?: boolean): void;
+        /** 删除事件监听 */
+        removeEventListener(name: string, caller: any, method: Function): void;
+        /** 删除事件全部监听 */
+        removeEventListeners(name: string): void;
+        /** 执行 */
+        static dispatch(name: string): void;
+    }
+}
+/**
+ * Created by cjb on 2018-05-01
+ */
+declare module core.base {
+    class Font {
+        private static _instance;
+        static readonly instance: Font;
+        setFont(str: string): void;
+    }
+    class FontCanvas extends Font {
+        setFont(str: string): void;
+    }
+    class FontWebGL extends Font {
+    }
+}
+/**
+ * Created by cjb on 2018-04-29
+ */
+declare module common {
+    class GlobalData {
+        static ScreenWidth: number;
+        static ScreenHeight: number;
+        static StageWidth: number;
+        static StageHeight: number;
+        static Ctx0: WebGLRenderingContext;
+        static Ctx1: CanvasRenderingContext2D;
+        static CtxType: number;
+    }
+}
 declare module math {
     /**
      * Rectangle 对象是按其位置（由它左上角的点 (x, y) 确定）以及宽度和高度定义的区域。<br/>
@@ -169,65 +236,86 @@ declare module math {
     let $TempRectangle: Rectangle;
 }
 declare module display {
-    import Rectangle = math.Rectangle;
-    class DisplayObject {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        scaleX: number;
-        scaleY: number;
-        protected _viewport: Rectangle;
-        constructor();
-        render(ctx: any, x: any, y: any): void;
-    }
-}
-declare module display {
-    class DisplayObjectContainer extends DisplayObject {
+    import EventDispatcher = core.EventDispatcher;
+    class DisplayObjectContainer extends EventDispatcher {
         private _children;
+        parent: DisplayObjectContainer;
         constructor();
         readonly numChildren: number;
-        readonly getChildren: Array<DisplayObject>;
-        addChild(child: DisplayObject): void;
-        removeChildAt(index: number): DisplayObject;
-        removeChildren(): void;
-        render(ctx: any, x: any, y: any): void;
+        readonly children: Array<DisplayObjectContainer>;
+        addChild(child: DisplayObjectContainer): void;
+        removeChild(child: DisplayObjectContainer): void;
+        removeChildAt(index: number): DisplayObjectContainer;
+        getIndex(child: DisplayObjectContainer): number;
+        removeAll(): void;
+        removeSelf(): void;
     }
 }
 declare module display {
-    import DisplayObjectContainer = display.DisplayObjectContainer;
     import Rectangle = math.Rectangle;
-    class Stage extends DisplayObjectContainer {
+    class DisplayObject extends DisplayObjectContainer {
+        private _x;
+        private _y;
+        posChange: boolean;
+        width: number;
+        height: number;
+        private _scaleX;
+        private _scaleY;
+        scaleChange: boolean;
+        pivotX: number;
+        pivotY: number;
+        protected _viewport: Rectangle;
+        constructor();
+        readonly globalX: number;
+        readonly globalY: number;
+        x: number;
+        y: number;
+        pos(x: number, y: number): void;
+        scaleY: number;
+        scaleX: number;
+        scale(scaleX: number, scaleY: number): void;
+        render(parentX: any, parentY: any): void;
+        protected renderSelf(): void;
+    }
+}
+declare module display {
+    import Rectangle = math.Rectangle;
+    class Stage extends DisplayObject {
         private static _instance;
         static viewport: Rectangle;
         constructor();
         static instance(): Stage;
     }
 }
-declare module display {
-    class Bitmap extends DisplayObject {
-        private _img;
-        constructor(imgSrc: string);
-        render(ctx: any, parentX: any, parentY: any): void;
-        private drawImage(ctx, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+/**
+ * Created by cjb on 2018-04-30
+ */
+declare module core.base {
+    class Vo {
+        static copy(from: Vo, to: Vo): Vo;
+        clone(): Vo;
     }
 }
 /**
- * Created by cjb on 2018-04-29
+ * Created by cjb on 2018-05-01
  */
-declare module common {
-    class GlobalData {
-        static ScreenWidth: number;
-        static ScreenHeight: number;
-        static StageWidth: number;
-        static StageHeight: number;
+declare module display {
+    class RenderContext {
+        private ctx0;
+        private ctx1;
+        static _instance: RenderContext;
+        constructor();
+        static readonly instance: RenderContext;
+        scale(x: number, y: number): void;
     }
 }
 /**
  * Created by cjb on 2018-04-30
  */
 import GlobalData = common.GlobalData;
+import Font = core.base.Font;
 declare function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void;
+declare function setFont(font: string): void;
 declare module manager {
     /**
      * 帧运算管理器
@@ -919,11 +1007,24 @@ declare let egret_cos_map: {};
  */
 declare let DEG_TO_RAD: number;
 /**
- * Created by cjb on 2018-04-30
+ * Created by cjb on 2018-05-01
  */
-declare module utils {
-    class Vo {
-        static clone(vo1: Vo, vo2: Vo): Vo;
-        clone(vo: Vo): Vo;
+declare module core.base {
+    class Init {
+        constructor();
+        private initWebGl(ctx);
+        private initCanvas(canvas);
+    }
+}
+/**
+ * Created by cjb on 2018-05-01
+ */
+declare module display.component {
+    class VImage extends DisplayObject {
+        private _img;
+        constructor(imgSrc: string);
+        private onLoad();
+        protected renderSelf(): void;
+        private drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
     }
 }

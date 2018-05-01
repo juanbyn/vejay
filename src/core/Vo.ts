@@ -3,15 +3,16 @@
  */
 module core.base {
     export class Vo {
-        public static clone(vo1: Vo, vo2: Vo): Vo {
-            for (var propName in vo1) {
-                vo2[propName] = vo1[propName];
+        
+        public static copy(from: Vo, to: Vo): Vo {
+            for (var propName in from) {
+                to[propName] = from[propName];
             }
-            return vo2;
+            return to;
         }
         
-        public clone(vo: Vo): Vo {
-            return Vo.clone(this, vo);
+        public clone(): Vo {
+            return Vo.copy(this, new Vo());
         }
         
     }

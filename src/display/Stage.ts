@@ -1,9 +1,8 @@
 module display {
-    import DisplayObjectContainer = display.DisplayObjectContainer;
     import Rectangle = math.Rectangle;
     import GlobalData = common.GlobalData;
     
-    export class Stage extends DisplayObjectContainer {
+    export class Stage extends DisplayObject {
         private static _instance: Stage;
         public static viewport: Rectangle;
         

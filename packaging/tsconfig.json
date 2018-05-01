@@ -9,10 +9,13 @@
     "../src/**/*"
   ],
   "files": [
-    "../src/common/globalData.ts",
+    "../src/core/Dictionary.ts",
+    "../src/core/EventDispatcher.ts",
+    "../src/core/base/Font.ts",
+    "../src/global/globalData.ts",
     "../src/math/rectangle.ts",
-    "../src/display/displayObject.ts",
     "../src/display/displayObjectContainer.ts",
+    "../src/display/displayObject.ts",
     "../src/display/stage.ts",
     "../src/display/bitmap.ts"
   ]

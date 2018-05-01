@@ -1,3 +1,163 @@
+/**
+ * Created by cjb on 2018-05-01
+ */
+var core;
+(function (core) {
+    class Dictionary {
+        constructor() {
+            this._obj = {};
+        }
+        get keys() {
+            var arr = [];
+            for (var key in this._obj) {
+                arr.push(key);
+            }
+            return arr;
+        }
+        get values() {
+            var arr = [];
+            // for (var value of this._obj) {
+            //     arr.push(value);
+            // }
+            for (var key in this._obj) {
+                arr.push(this._obj[key]);
+            }
+            return arr;
+        }
+        set(key, value) {
+            this._obj[key] = value;
+        }
+        get(key) {
+            var value = this._obj[key];
+            if (value !== undefined) {
+                return value;
+            }
+            return null;
+        }
+        has(key) {
+            return this._obj.hasOwnProperty(key);
+        }
+        remove(key) {
+            delete this._obj[key];
+        }
+        clear() {
+            this._obj = {};
+        }
+    }
+    core.Dictionary = Dictionary;
+})(core || (core = {}));
+/**
+ * Created by cjb on 2018-05-01
+ */
+var core;
+(function (core) {
+    class EventDispatcher {
+        /**
+         * 添加事件监听
+         * @param {string} name 事件名称
+         * @param caller 执行域
+         * @param {Function} method 方法
+         * @param {Array<any>} args [参数]
+         * @param {boolean} once 是否只执行一次
+         */
+        addEventListener(name, caller, method, args, once = false) {
+            var events = EventDispatcher._list.get(name);
+            var e;
+            if (!events) {
+                events = [];
+            }
+            for (var i = 0; i < events.length; i++) {
+                e = events[i];
+                if (method === e[1]) {
+                    return;
+                }
+            }
+            events.push([caller, method, args, once]);
+        }
+        /** 删除事件监听 */
+        removeEventListener(name, caller, method) {
+            var events = EventDispatcher._list.get(name);
+            var e;
+            for (var i = 0; i < events.length; i++) {
+                e = events[i];
+                if (method === e[1]) {
+                    events.splice(i, 1);
+                    return;
+                }
+            }
+        }
+        /** 删除事件全部监听 */
+        removeEventListeners(name) {
+            EventDispatcher._list.remove(name);
+        }
+        /** 执行 */
+        static dispatch(name) {
+            var events = this._list.get(name);
+            var e;
+            var caller;
+            var method;
+            var args;
+            for (var i = 0; i < events.length; i++) {
+                e = events[i];
+                caller = e[0];
+                method = e[1];
+                args = e[2];
+                method.apply(caller, args);
+                if (e[3]) {
+                    events.splice(i--, 1);
+                }
+            }
+        }
+    }
+    EventDispatcher._list = new core.Dictionary(); // key:事件名称 , value: [执行域, 方法, 参数, 是否只执行一次]
+    core.EventDispatcher = EventDispatcher;
+})(core || (core = {}));
+/**
+ * Created by cjb on 2018-05-01
+ */
+var core;
+(function (core) {
+    var base;
+    (function (base) {
+        class Font {
+            static get instance() {
+                if (!this._instance) {
+                    if (GlobalData.CtxType === 1) {
+                        this._instance = new FontCanvas();
+                    }
+                    else {
+                        this._instance = new FontWebGL();
+                    }
+                }
+                return this._instance;
+            }
+            setFont(str) {
+            }
+        }
+        base.Font = Font;
+        class FontCanvas extends Font {
+            setFont(str) {
+                var ctx = GlobalData.Ctx1;
+                ctx.font = str;
+                ctx.save();
+            }
+        }
+        base.FontCanvas = FontCanvas;
+        class FontWebGL extends Font {
+        }
+        base.FontWebGL = FontWebGL;
+    })(base = core.base || (core.base = {}));
+})(core || (core = {}));
+/**
+ * Created by cjb on 2018-04-29
+ */
+var common;
+(function (common) {
+    class GlobalData {
+    }
+    GlobalData.CtxType = 0; // 0:webGL 1:canvas
+    common.GlobalData = GlobalData;
+})(common || (common = {}));
 var math;
 (function (math) {
     let rectanglePool = [];
@@ -322,23 +482,8 @@ var math;
 })(math || (math = {}));
 var display;
 (function (display) {
-    var Rectangle = math.Rectangle;
-    class DisplayObject {
-        constructor() {
-            this.x = 0;
-            this.y = 0;
-            this.scaleX = 1;
-            this.scaleY = 1;
-            this._viewport = new Rectangle();
-        }
-        render(ctx, x, y) {
-        }
-    }
-    display.DisplayObject = DisplayObject;
-})(display || (display = {}));
-var display;
-(function (display) {
-    class DisplayObjectContainer extends display.DisplayObject {
+    var EventDispatcher = core.EventDispatcher;
+    class DisplayObjectContainer extends EventDispatcher {
         constructor() {
             super();
             this._children = [];
@@ -346,19 +491,24 @@ var display;
         get numChildren() {
             return this._children.length;
         }
-        get getChildren() {
+        get children() {
             return this._children;
         }
         addChild(child) {
+            child.parent = this;
             this._children.push(child);
+        }
+        removeChild(child) {
+            var index = this.parent.getIndex(child);
+            this.parent.removeChildAt(index);
         }
         removeChildAt(index) {
             if (index >= 0 && index < this._children.length) {
                 var child = this._children[index];
-                // child.setParent(null);
-                index = this._children.indexOf(child); // index might have changed by event handler
-                if (index >= 0)
-                    this._children.splice(index, 1);
+                child.parent = null;
+                //index = this._children.indexOf(child); // index might have changed by event handler
+                //if (index >= 0)
+                this._children.splice(index, 1);
                 // if (dispose) child.dispose();
                 return child;
             }
@@ -366,25 +516,128 @@ var display;
                 throw new RangeError('Invalid child index');
             }
         }
-        removeChildren() {
+        getIndex(child) {
+            return this._children.indexOf(child);
+        }
+        removeAll() {
             this._children.length = 0;
         }
-        render(ctx, x, y) {
-            let len = this._children.length;
-            for (let index = 0; index < len; index++) {
-                const element = this._children[index];
-                element.render(ctx, this.x + x, this.y + y);
-            }
+        removeSelf() {
+            this.parent.removeChild(this);
         }
     }
     display.DisplayObjectContainer = DisplayObjectContainer;
 })(display || (display = {}));
 var display;
 (function (display) {
-    var DisplayObjectContainer = display.DisplayObjectContainer;
+    var Rectangle = math.Rectangle;
+    class DisplayObject extends display.DisplayObjectContainer {
+        constructor() {
+            super();
+            this._x = 0;
+            this._y = 0;
+            this._scaleX = 1;
+            this._scaleY = 1;
+            this.pivotX = 0;
+            this.pivotY = 0;
+            this._viewport = new Rectangle();
+        }
+        get globalX() {
+            return this._viewport.x;
+        }
+        get globalY() {
+            return this._viewport.y;
+        }
+        get x() {
+            return this._x;
+        }
+        set x(value) {
+            if (this._x === value) {
+                return;
+            }
+            this._x = value;
+            this.posChange = true;
+        }
+        get y() {
+            return this._y;
+        }
+        set y(value) {
+            if (this._y === value) {
+                return;
+            }
+            this._y = value;
+            this.posChange = true;
+        }
+        pos(x, y) {
+            if (this._x === x && this._y === y) {
+                return;
+            }
+            this._x = x;
+            this._y = y;
+            this.posChange = true;
+        }
+        get scaleY() {
+            return this._scaleY;
+        }
+        set scaleY(value) {
+            if (this._scaleY === value) {
+                return;
+            }
+            this._scaleY = value;
+            this.scaleChange = true;
+        }
+        get scaleX() {
+            return this._scaleX;
+        }
+        set scaleX(value) {
+            if (this._scaleX === value) {
+                return;
+            }
+            this._scaleX = value;
+            this.scaleChange = true;
+        }
+        scale(scaleX, scaleY) {
+            if (this._scaleX === scaleX && this._scaleY === scaleY) {
+                return;
+            }
+            this._scaleX = scaleX;
+            this._scaleY = scaleY;
+            this.scaleChange = true;
+        }
+        render(parentX, parentY) {
+            var sWidth = this.width * Math.abs(this.scaleX);
+            var sHeight = this.height * Math.abs(this.scaleY);
+            var sX = parentX + this.x - this.pivotX * sWidth;
+            var sY = parentY + this.y - this.pivotY * sHeight;
+            if (this.scaleX < 0) {
+                sX += sWidth;
+            }
+            if (this.scaleY < 0) {
+                sY += sHeight;
+            }
+            this._viewport.setTo(sX, sY, sWidth, sHeight);
+            if (!display.Stage.viewport.containsRect(this._viewport)) {
+                return;
+            }
+            // 渲染自身
+            this.renderSelf();
+            // 渲染子对象
+            let len = this.children.length;
+            for (let index = 0; index < len; index++) {
+                var element = this.children[index];
+                element.render(this.x + parentX, this.y + parentY);
+            }
+        }
+        renderSelf() {
+        }
+    }
+    display.DisplayObject = DisplayObject;
+})(display || (display = {}));
+var display;
+(function (display) {
     var Rectangle = math.Rectangle;
     var GlobalData = common.GlobalData;
-    class Stage extends DisplayObjectContainer {
+    class Stage extends display.DisplayObject {
         constructor() {
             super();
             this.x = (GlobalData.ScreenWidth - GlobalData.StageWidth) * 0.5;
@@ -402,94 +655,66 @@ var display;
     }
     display.Stage = Stage;
 })(display || (display = {}));
+/**
+ * Created by cjb on 2018-04-30
+ */
+var core;
+(function (core) {
+    var base;
+    (function (base) {
+        class Vo {
+            static copy(from, to) {
+                for (var propName in from) {
+                    to[propName] = from[propName];
+                }
+                return to;
+            }
+            clone() {
+                return Vo.copy(this, new Vo());
+            }
+        }
+        base.Vo = Vo;
+    })(base = core.base || (core.base = {}));
+})(core || (core = {}));
+/**
+ * Created by cjb on 2018-05-01
+ */
 var display;
 (function (display) {
-    var Stage = display.Stage;
-    class Bitmap extends display.DisplayObject {
-        constructor(imgSrc) {
-            super();
-            this._img = new Image();
-            this._img.src = imgSrc;
-            this._img.onload = () => {
-                this.width = this.width === undefined ? this._img.width : this.width;
-                this.height = this.height === undefined ? this._img.height : this.height;
-            };
+    class RenderContext {
+        constructor() {
+            if (RenderContext._instance) {
+                console.error("get instance instead of new");
+                return;
+            }
+            this.ctx0 = GlobalData.Ctx0;
+            this.ctx1 = GlobalData.Ctx1;
         }
-        render(ctx, parentX, parentY) {
-            this._viewport.setTo(parentX + this.x, parentY + this.y, this.width, this.height);
-            var parentViewport = Stage.viewport;
-            if (this._viewport.left > parentViewport.right ||
-                this._viewport.right < parentViewport.left ||
-                this._viewport.top > parentViewport.bottom ||
-                this._viewport.bottom < parentViewport.top)
-                return;
-            if (parentViewport.containsRect(this._viewport)) {
-                // ctx.drawImage(this._img, 0, 0, this._viewport.width, this._viewport.height, this._viewport.x, this._viewport.y, this._viewport.width, this._viewport.height);
-                this.drawImage(ctx, 0, 0, this._viewport.width, this._viewport.height, this._viewport.x, this._viewport.y, this._viewport.width, this._viewport.height);
-                return;
+        static get instance() {
+            if (!this._instance) {
+                this._instance = new RenderContext();
             }
-            let sx, sy, sWidth, sHeight;
-            let dx, dy, dWidth, dHeight;
-            if (this._viewport.left < parentViewport.left) {
-                sx = parentViewport.left - this._viewport.left;
-                dx = parentViewport.left;
-                sWidth = dWidth = this._viewport.right - parentViewport.left;
-            }
-            else {
-                sx = 0;
-                dx = this._viewport.x;
-                sWidth = dWidth = this._viewport.width;
-            }
-            if (this._viewport.top < parentViewport.top) {
-                sy = parentViewport.top - this._viewport.top;
-                dy = parentViewport.top;
-                sHeight = dHeight = this._viewport.bottom - parentViewport.top;
-            }
-            else {
-                sy = 0;
-                dy = this._viewport.y;
-                sHeight = dHeight = this._viewport.height;
-            }
-            if (this._viewport.right > parentViewport.right) {
-                sWidth = dWidth = parentViewport.right - this._viewport.left;
-            }
-            if (this._viewport.bottom > parentViewport.bottom) {
-                sHeight = dHeight = parentViewport.bottom - this._viewport.top;
-            }
-            // ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-            this.drawImage(ctx, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            return this._instance;
         }
-        drawImage(ctx, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
-            if (this.scaleX !== 1 || this.scaleY !== 1) {
-                ctx.translate(0, dHeight + Stage.viewport.y * 2);
-                ctx.scale(this.scaleX, this.scaleY);
-                ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                return;
-            }
-            ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+        scale(x, y) {
         }
     }
-    display.Bitmap = Bitmap;
+    display.RenderContext = RenderContext;
 })(display || (display = {}));
-/**
- * Created by cjb on 2018-04-29
- */
-var common;
-(function (common) {
-    class GlobalData {
-    }
-    common.GlobalData = GlobalData;
-})(common || (common = {}));
 /**
  * Created by cjb on 2018-04-30
  */
 var GlobalData = common.GlobalData;
+var Font = core.base.Font;
 function init(stageW, stageH, ScreenW, ScreenH) {
     GlobalData.StageWidth = stageW;
     GlobalData.ScreenHeight = stageH;
     GlobalData.ScreenWidth = ScreenW ? ScreenW : stageW;
     GlobalData.ScreenHeight = ScreenH ? ScreenH : stageH;
+    new core.base.Init();
+}
+function setFont(font) {
+    Font.instance.setFont(font);
 }
 var manager;
 (function (manager) {
@@ -1444,22 +1669,105 @@ if (!Function.prototype.bind) {
     };
 }
 /**
- * Created by cjb on 2018-04-30
+ * Created by cjb on 2018-05-01
  */
-var utils;
-(function (utils) {
-    class Vo {
-        static clone(vo1, vo2) {
-            for (var propName in vo1) {
-                vo2[propName] = vo1[propName];
+var core;
+(function (core) {
+    var base;
+    (function (base) {
+        class Init {
+            constructor() {
+                var canvas = wx.createCanvas();
+                var renderContext = canvas.getContext("webgl");
+                if (renderContext) {
+                    this.initWebGl(renderContext);
+                }
+                else {
+                    this.initCanvas(canvas);
+                }
             }
-            return vo2;
+            initWebGl(ctx) {
+                GlobalData.Ctx0 = ctx;
+            }
+            initCanvas(canvas) {
+                var ctx = canvas.getContext("2d");
+                GlobalData.Ctx1 = ctx;
+                GlobalData.CtxType = 1;
+            }
         }
-        clone(vo) {
-            return Vo.clone(this, vo);
+        base.Init = Init;
+    })(base = core.base || (core.base = {}));
+})(core || (core = {}));
+/**
+ * Created by cjb on 2018-05-01
+ */
+var display;
+(function (display) {
+    var component;
+    (function (component) {
+        var Stage = display.Stage;
+        class VImage extends display.DisplayObject {
+            constructor(imgSrc) {
+                super();
+                this._img = new Image();
+                this._img.src = imgSrc;
+                this._img.onload = this.onLoad;
+            }
+            onLoad() {
+                this.width = this.width === undefined ? this._img.width : this.width;
+                this.height = this.height === undefined ? this._img.height : this.height;
+            }
+            renderSelf() {
+                var parentViewport = Stage.viewport;
+                var viewport = this._viewport;
+                if (parentViewport.containsRect(viewport)) {
+                    this.drawImage(0, 0, viewport.width, viewport.height, viewport.x, viewport.y, viewport.width, viewport.height);
+                    return;
+                }
+                let sx, sy, sWidth, sHeight;
+                let dx, dy, dWidth, dHeight;
+                if (viewport.left < parentViewport.left) {
+                    sx = parentViewport.left - viewport.left;
+                    dx = parentViewport.left;
+                    sWidth = dWidth = viewport.right - parentViewport.left;
+                }
+                else {
+                    sx = 0;
+                    dx = viewport.x;
+                    sWidth = dWidth = viewport.width;
+                }
+                if (viewport.top < parentViewport.top) {
+                    sy = parentViewport.top - viewport.top;
+                    dy = parentViewport.top;
+                    sHeight = dHeight = viewport.bottom - parentViewport.top;
+                }
+                else {
+                    sy = 0;
+                    dy = viewport.y;
+                    sHeight = dHeight = viewport.height;
+                }
+                if (viewport.right > parentViewport.right) {
+                    sWidth = dWidth = parentViewport.right - viewport.left;
+                }
+                if (viewport.bottom > parentViewport.bottom) {
+                    sHeight = dHeight = parentViewport.bottom - viewport.top;
+                }
+                this.drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            }
+            drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
+                var ctx = GlobalData.Ctx1;
+                // if (this.scaleChange && (this.scaleX !== 1 || this.scaleY !== 1)) {
+                //     ctx.translate(0, dHeight + Stage.viewport.y * 2);
+                //     ctx.scale(this.scaleX, this.scaleY);
+                //     ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                //     ctx.setTransform(1, 0, 0, 1, 0, 0);
+                //     return;
+                // }
+                ctx.drawImage(this._img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            }
         }
-    }
-    utils.Vo = Vo;
-})(utils || (utils = {}));
+        component.VImage = VImage;
+    })(component = display.component || (display.component = {}));
+})(display || (display = {}));
 
 //# sourceMappingURL=vejay.js.map
