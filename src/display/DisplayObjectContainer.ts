@@ -53,5 +53,8 @@ module display {
             this.parent.removeChild(this);
         }
         
+        public get asDisplayObject():DisplayObject{
+            return (this instanceof DisplayObject) ? <DisplayObject><any>this : null;
+        }
     }
 }
