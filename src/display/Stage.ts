@@ -1,9 +1,8 @@
 module display {
-    import Rectangle = math.Rectangle;
+    import Rectangle = utils.math.Rectangle;
     import GlobalData = common.GlobalData;
     
-    export class Stage extends DisplayObject {
-        private static _instance: Stage;
+    export class Stage extends DisplayObjectContainer {
         public static viewport: Rectangle;
         
         constructor() {
@@ -14,13 +13,6 @@ module display {
             this.width = GlobalData.StageWidth;
             this.height = GlobalData.StageHeight;
             Stage.viewport = new Rectangle(this.x, this.y, this.width, this.height);
-        }
-        
-        public static instance(): Stage {
-            if (!Stage._instance) {
-                this._instance = new Stage()
-            }
-            return this._instance;
         }
         
     }

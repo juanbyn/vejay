@@ -1,7 +1,8 @@
 module display {
-    import Rectangle = math.Rectangle;
+    import Rectangle = utils.math.Rectangle;
+    import EventDispatcher = core.EventDispatcher;
     
-    export class DisplayObject extends DisplayObjectContainer {
+    export class DisplayObject extends EventDispatcher {
         private _x: number = 0;
         private _y: number = 0;
         public posChange: boolean;
@@ -12,6 +13,12 @@ module display {
         public scaleChange: boolean;
         public pivotX: number = 0;
         public pivotY: number = 0;
+        private _rotation: number = 0;
+        public rotationChange: boolean = false;
+        
+        public parent: DisplayObjectContainer;
+        public visible: boolean = true;
+        public mouseEnable: boolean = false;
         
         protected _viewport: Rectangle = new Rectangle();
         
@@ -19,13 +26,13 @@ module display {
             super();
         }
         
-        get globalX(): number {
-            return this._viewport.x;
-        }
-        
-        get globalY(): number {
-            return this._viewport.y;
-        }
+        // get globalX(): number {
+        //     return this._viewport.x;
+        // }
+        //
+        // get globalY(): number {
+        //     return this._viewport.y;
+        // }
         
         get x(): number {
             return this._x;
@@ -93,37 +100,21 @@ module display {
             this.scaleChange = true;
         }
         
+        get rotation(): number {
+            return this._rotation;
+        }
         
-        public render(parentX, parentY) {
-            var sWidth = this.width * Math.abs(this.scaleX);
-            var sHeight = this.height * Math.abs(this.scaleY);
-            var sX = parentX + this.x - this.pivotX * sWidth;
-            var sY = parentY + this.y - this.pivotY * sHeight;
-            
-            if (this.scaleX < 0) {
-                sX += sWidth;
-            }
-            if (this.scaleY < 0) {
-                sY += sHeight;
-            }
-            this._viewport.setTo(sX, sY, sWidth, sHeight);
-            
-            if (!Stage.viewport.containsRect(this._viewport)) {
+        set rotation(value: number) {
+            if (this._rotation === value) {
                 return;
             }
-            // 渲染自身
-            this.renderSelf();
-            // 渲染子对象
-            let len = this.children.length;
-            for (let index = 0; index < len; index++) {
-                var element: DisplayObject = this.children[index] as DisplayObject;
-                element.render(this.x + parentX, this.y + parentY);
-            }
+            this._rotation = value;
+            this.rotationChange = true;
         }
         
-        protected renderSelf(): void {
-        }
+        public render(parentX, parentY) {
         
+        }
         
     }
 }
