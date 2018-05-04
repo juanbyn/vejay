@@ -1023,6 +1023,14 @@ declare module display {
         scale(x: number, y: number): void;
     }
 }
+/**
+ * Created by cjb on 2018-04-30
+ */
+import GlobalData = common.GlobalData;
+import SingletonFactory = core.base.SingletonFactory;
+declare var stage: any;
+declare var loader: any;
+declare function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void;
 declare module manager {
     /**
      * 帧运算管理器
@@ -1088,11 +1096,3 @@ declare module process {
         process(): void;
     }
 }
-/**
- * Created by cjb on 2018-04-30
- */
-import GlobalData = common.GlobalData;
-import SingletonFactory = core.base.SingletonFactory;
-declare var stage: any;
-declare var loader: any;
-declare function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void;
