@@ -1,7 +1,7 @@
 /**
  * Created by cjb on 2018-05-01
  */
-declare module core {
+declare module utils {
     class Dictionary {
         private _obj;
         readonly keys: Array<string>;
@@ -13,59 +13,7 @@ declare module core {
         clear(): void;
     }
 }
-/**
- * Created by cjb on 2018-05-01
- */
-declare module core {
-    class EventDispatcher {
-        private static _list;
-        /**
-         * 添加事件监听
-         * @param {string} name 事件名称
-         * @param caller 执行域
-         * @param {Function} method 方法
-         * @param {Array<any>} args [参数]
-         * @param {boolean} once 是否只执行一次
-         */
-        addEventListener(name: string, caller: any, method: Function, args: Array<any>, once?: boolean): void;
-        /** 删除事件监听 */
-        removeEventListener(name: string, caller: any, method: Function): void;
-        /** 删除事件全部监听 */
-        removeEventListeners(name: string): void;
-        /** 执行 */
-        static dispatch(name: string): void;
-    }
-}
-/**
- * Created by cjb on 2018-05-01
- */
-declare module core.base {
-    class Font {
-        private static _instance;
-        static readonly instance: Font;
-        setFont(str: string): void;
-    }
-    class FontCanvas extends Font {
-        setFont(str: string): void;
-    }
-    class FontWebGL extends Font {
-    }
-}
-/**
- * Created by cjb on 2018-04-29
- */
-declare module common {
-    class GlobalData {
-        static ScreenWidth: number;
-        static ScreenHeight: number;
-        static StageWidth: number;
-        static StageHeight: number;
-        static Ctx0: WebGLRenderingContext;
-        static Ctx1: CanvasRenderingContext2D;
-        static CtxType: number;
-    }
-}
-declare module math {
+declare module utils.math {
     /**
      * Rectangle 对象是按其位置（由它左上角的点 (x, y) 确定）以及宽度和高度定义的区域。<br/>
      * Rectangle 类的 x、y、width 和 height 属性相互独立；更改一个属性的值不会影响其他属性。
@@ -187,6 +135,12 @@ declare module math {
          */
         containsRect(rect: Rectangle): boolean;
         /**
+         * 判断是否与另外一个 Rectangle 对象相交
+         * @param {utils.math.Rectangle} rect
+         * @returns {boolean}
+         */
+        isIntersectRect(rect: Rectangle): boolean;
+        /**
          * 确定在 toCompare 参数中指定的对象是否等于此 Rectangle 对象。
          * 此方法将某个对象的 x、y、width 和 height 属性与此 Rectangle 对象所对应的相同属性进行比较。
          * @param toCompare 要与此 Rectangle 对象进行比较的矩形。
@@ -235,141 +189,84 @@ declare module math {
      */
     let $TempRectangle: Rectangle;
 }
-declare module display {
-    import EventDispatcher = core.EventDispatcher;
-    class DisplayObjectContainer extends EventDispatcher {
-        private _children;
-        parent: DisplayObjectContainer;
-        constructor();
-        readonly numChildren: number;
-        readonly children: Array<DisplayObjectContainer>;
-        addChild(child: DisplayObjectContainer): void;
-        removeChild(child: DisplayObjectContainer): void;
-        removeChildAt(index: number): DisplayObjectContainer;
-        getIndex(child: DisplayObjectContainer): number;
-        removeAll(): void;
-        removeSelf(): void;
-    }
-}
-declare module display {
-    import Rectangle = math.Rectangle;
-    class DisplayObject extends DisplayObjectContainer {
-        private _x;
-        private _y;
-        posChange: boolean;
-        width: number;
-        height: number;
-        private _scaleX;
-        private _scaleY;
-        scaleChange: boolean;
-        pivotX: number;
-        pivotY: number;
-        protected _viewport: Rectangle;
-        constructor();
-        readonly globalX: number;
-        readonly globalY: number;
-        x: number;
-        y: number;
-        pos(x: number, y: number): void;
-        scaleY: number;
-        scaleX: number;
-        scale(scaleX: number, scaleY: number): void;
-        render(parentX: any, parentY: any): void;
-        protected renderSelf(): void;
-    }
-}
-declare module display {
-    import Rectangle = math.Rectangle;
-    class Stage extends DisplayObject {
-        private static _instance;
-        static viewport: Rectangle;
-        constructor();
-        static instance(): Stage;
-    }
-}
 /**
- * Created by cjb on 2018-04-30
+ * Created by cjb on 2018/5/3
  */
-declare module core.base {
-    class Vo {
-        static copy(from: Vo, to: Vo): Vo;
-        clone(): Vo;
+declare module utils.math {
+    class NumberUtils {
+        static TWO_PI: number;
+        static Deg2Rad: number;
+        static Rad2Deg: number;
+        private static num;
+        /**
+         * 获取一个在min和max之间的随机数，包括min，不包括max
+         */
+        static getRand(min: number, max: number): number;
+        /**
+         * 获取一个在min和max之间的随机数，包括min和max
+         */
+        static getIntRand(min: number, max: number): number;
+        /**
+         * 小数点后四舍五入
+         * @param value
+         * @param n 默认小数点后两位
+         * @returns {number}
+         */
+        static roundN(value: number, n?: number): number;
+        /**
+         * 简单的新ID
+         */
+        static readonly newGuid: string;
+        /**
+         * 获取倾斜的角度180,右为0度
+         */
+        static getAngle(beginX: number, beginY: number, endX: number, endY: number): number;
+        /**
+         * 验证一个点是否在一个扇形范围内
+         * @param range 扇形范围
+         * @param degree 扇形中心点角度
+         * @param x1 扇形中心点x
+         * @param y1 扇形中心点y
+         * @param x2 目标点x
+         * @param y2 目标点y
+         */
+        static isINSector(range: number, degree: number, x1: number, y1: number, x2: number, y2: number): boolean;
+        /**
+         * 计算两点之间距离
+         */
+        static getDistance(x1: number, y1: number, x2: number, y2: number): number;
+        /**
+         * 计算点是否在一个矩形范围内
+         */
+        static isInRange(x: number, y: number, rectangle: Rectangle): boolean;
+        /**
+         
+         * 从（beginX，beginY）到（endX，endY）的连线中，获取离（endX，endY）距离为distance的点
+         
+         * 用于寻路到离目标点最远的点
+         
+         */
+        /**
+         * 以（beginX，beginY）为原点，根据指定角度、指定距离，算出点（endX，endY）
+         * 用于角色施法，以角色为中心，向某个方向施放一个指定距离的技能
+         */
+        static getAnglePoint(beginX: number, beginY: number, angle: number, distance: number): Point;
+        /**
+         * 从（beginX，beginY）到（endX，endY）的连线中，获取离（beginX，beginY）距离为distance的偏移点
+         * 用于寻路到离目标点最近的点
+         */
+        static getNearestPoint(beginX: number, beginY: number, endX: number, endY: number, distance: number): Point;
+        /**
+         * 根据角度,8方向判断
+         */
+        static get8Direction(degree: number): 2 | 6 | 4 | 8;
+        /**
+         * 根据2个点,8方向判断
+         */
+        static get8Direction2(beginX: number, beginY: number, endX: number, endY: number): 2 | 6 | 4 | 8;
     }
 }
-/**
- * Created by cjb on 2018-05-01
- */
-declare module display {
-    class RenderContext {
-        private ctx0;
-        private ctx1;
-        static _instance: RenderContext;
-        constructor();
-        static readonly instance: RenderContext;
-        scale(x: number, y: number): void;
-    }
-}
-/**
- * Created by cjb on 2018-04-30
- */
-import GlobalData = common.GlobalData;
-import Font = core.base.Font;
-declare function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void;
-declare function setFont(font: string): void;
-declare module manager {
-    /**
-     * 帧运算管理器
-     * 负责管理所有注册对象的enterFrame函数，对每帧一定要计算的和卡的时候可以跳帧的进行区分处理
-     * 使用方法FrameManager.add(process);
-     *
-     * @author caijingxiao
-     *
-     */
-    class FrameManager {
-        static readonly REAL_TIME: number;
-        static readonly NORMAL: number;
-        static readonly IDLE: number;
-        static frameRate: number;
-        private static _deltaTime;
-        private static _isInterpolation;
-        private static _fps;
-        private static _spf;
-        private static _processList;
-        private static _priorityTime;
-        private static _lastFrameTimestamp;
-        private static _time;
-        private static _currentFrameTime;
-        private static _serverTime;
-        private static readonly SAMPLE_COUNT;
-        private static _frameCount;
-        private static _frameScore;
-        private static _frameAvgScoreIndex;
-        private static _frameAvgScore;
-        private static _lastScoreTime;
-        static start(): void;
-        /**
-         * 注册每帧运行函数
-         * 由于使用Dictionary，所以先加入的函数并不一定会先运行
-         * @param process 处理函数，函数格式Function(passedTime:int)，passedTime表示上一帧到当前帧所经过的毫秒数
-         * @param priority 优先级，默认为FrameManager.NORMAL
-         *
-         */
-        static add(key: string, process: Function, thisObject: any, priority?: number): void;
-        /**
-         * 移除每帧运行函数
-         * @param process 处理函数
-         */
-        static remove(key: string): void;
-        private static onEnterFrame();
-        private static process(passedTime, processTime, funRepeatTime);
-        private static callbackHandler(callback, passedTime);
-        /**
-         * 启动FrameManager以来经过的毫秒数
-         */
-        static readonly time: number;
-    }
-}
-declare module math {
+declare module utils.math {
     /**
      * The Matrix class represents a transformation matrix that determines how to map points from one coordinate space to
      * another. You can perform various graphical transformations on a display object by setting the properties of a Matrix
@@ -846,7 +743,7 @@ declare module math {
      */
     let $TempMatrix: Matrix;
 }
-declare module math {
+declare module utils.math {
     /**
      * Point 对象表示二维坐标系统中的某个位置，其中 x 表示水平轴，y 表示垂直轴。
      */
@@ -961,51 +858,139 @@ declare module math {
      */
     let $TempPoint: Point;
 }
-declare module math {
-    class NumberUtils {
+/**
+ * Created by cjb on 2018-05-01
+ */
+declare module core {
+    class EventDispatcher {
+        /** key:事件名称 , value: [执行域, 方法, 参数, 是否只执行一次] */
+        private static _list;
         /**
-         * 判断是否是数值
-         * @param value 需要判断的参数
-         * @returns
+         * 添加事件监听
+         * @param {string} name 事件名称
+         * @param caller 执行域
+         * @param {Function} method 方法
+         * @param {Array<any>} args [参数]
+         * @param {boolean} once 是否只执行一次
          */
-        static isNumber(value: any): boolean;
-        /**
-         * 得到对应角度值的sin近似值
-         * @param value {number} 角度值
-         * @returns {number} sin值
-         */
-        static sin(value: number): number;
-        private static sinInt(value);
-        /**
-         * 得到对应角度值的cos近似值
-         * @param value {number} 角度值
-         * @returns {number} cos值
-         * @version Egret 2.4
-         * @platform Web,Native
-         * @language zh_CN
-         */
-        static cos(value: number): number;
-        /**
-         * @private
-         *
-         * @param value
-         * @returns
-         */
-        private static cosInt(value);
+        addEventListener(name: string, caller: any, method: Function, args: Array<any>, once?: boolean): void;
+        /** 删除事件监听 */
+        removeEventListener(name: string, caller: any, method: Function): void;
+        /** 删除事件全部监听 */
+        removeEventListeners(name: string): void;
+        /** 发送 */
+        sendEvent(name: string, data: any): void;
+        /** 执行 */
+        static dispatch(name: string, data: any): void;
     }
 }
 /**
- * @private
+ * Created by cjb on 2018/5/3
  */
-declare let egret_sin_map: {};
+declare module core.base {
+    class SingletonFactory {
+        private static _factory;
+        static getInstance<T>(clazz: {
+            new (): T;
+        }): T;
+    }
+}
 /**
- * @private
+ * Created by cjb on 2018-05-01
  */
-declare let egret_cos_map: {};
+declare module core.base {
+    class Font {
+    }
+    class FontCanvas extends Font {
+        setFont(str: string): void;
+    }
+    class FontWebGL extends Font {
+    }
+}
 /**
- * @private
+ * Created by cjb on 2018-04-29
  */
-declare let DEG_TO_RAD: number;
+declare module common {
+    class GlobalData {
+        static ScreenWidth: number;
+        static ScreenHeight: number;
+        static StageWidth: number;
+        static StageHeight: number;
+        static Ctx0: WebGLRenderingContext;
+        static Ctx1: CanvasRenderingContext2D;
+        static CtxType: number;
+    }
+}
+declare module display {
+    import Rectangle = utils.math.Rectangle;
+    import EventDispatcher = core.EventDispatcher;
+    class DisplayObject extends EventDispatcher {
+        private _x;
+        private _y;
+        posChange: boolean;
+        width: number;
+        height: number;
+        private _scaleX;
+        private _scaleY;
+        scaleChange: boolean;
+        pivotX: number;
+        pivotY: number;
+        private _rotation;
+        rotationChange: boolean;
+        parent: DisplayObjectContainer;
+        visible: boolean;
+        mouseEnable: boolean;
+        protected _viewport: Rectangle;
+        constructor();
+        x: number;
+        y: number;
+        pos(x: number, y: number): void;
+        scaleY: number;
+        scaleX: number;
+        scale(scaleX: number, scaleY: number): void;
+        rotation: number;
+        render(parentX: any, parentY: any): void;
+    }
+}
+declare module display {
+    import Rectangle = utils.math.Rectangle;
+    class DisplayObjectContainer extends DisplayObject {
+        private _children;
+        protected parentViewport: Rectangle;
+        constructor();
+        readonly numChildren: number;
+        readonly children: Array<DisplayObject>;
+        addChild(child: DisplayObject): void;
+        removeChild(child: DisplayObject): void;
+        removeChildAt(index: number): DisplayObject;
+        getIndex(child: DisplayObject): number;
+        removeAll(): void;
+        removeSelf(): void;
+        protected renderSelf(): void;
+        render(parentX: any, parentY: any): void;
+        private setRotation(ctx, x, y);
+        readonly asImage: display.component.Image;
+    }
+}
+declare module display {
+    import Rectangle = utils.math.Rectangle;
+    class Stage extends DisplayObjectContainer {
+        static viewport: Rectangle;
+        constructor();
+    }
+}
+/**
+ * Created by cjb on 2018-05-01
+ */
+declare module display.component {
+    class Image extends DisplayObjectContainer {
+        private _img;
+        constructor(imgSrc: string);
+        private onLoad();
+        protected renderSelf(): void;
+        private drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    }
+}
 /**
  * Created by cjb on 2018-05-01
  */
@@ -1017,14 +1002,97 @@ declare module core.base {
     }
 }
 /**
- * Created by cjb on 2018-05-01
+ * Created by cjb on 2018-04-30
  */
-declare module display.component {
-    class VImage extends DisplayObject {
-        private _img;
-        constructor(imgSrc: string);
-        private onLoad();
-        protected renderSelf(): void;
-        private drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+declare module core.base {
+    class Vo {
+        static copy(from: Vo, to: Vo): Vo;
+        clone(): Vo;
     }
 }
+/**
+ * Created by cjb on 2018-05-01
+ */
+declare module display {
+    class RenderContext {
+        private ctx0;
+        private ctx1;
+        static _instance: RenderContext;
+        constructor();
+        static readonly instance: RenderContext;
+        scale(x: number, y: number): void;
+    }
+}
+declare module manager {
+    /**
+     * 帧运算管理器
+     * 负责管理所有注册对象的enterFrame函数，对每帧一定要计算的和卡的时候可以跳帧的进行区分处理
+     * 使用方法FrameManager.add(process);
+     *
+     * @author caijingxiao
+     *
+     */
+    class FrameManager {
+        static readonly REAL_TIME: number;
+        static readonly NORMAL: number;
+        static readonly IDLE: number;
+        static frameRate: number;
+        private static _deltaTime;
+        private static _isInterpolation;
+        private static _fps;
+        private static _spf;
+        private static _processList;
+        private static _priorityTime;
+        private static _lastFrameTimestamp;
+        private static _time;
+        private static _currentFrameTime;
+        private static _serverTime;
+        private static readonly SAMPLE_COUNT;
+        private static _frameCount;
+        private static _frameScore;
+        private static _frameAvgScoreIndex;
+        private static _frameAvgScore;
+        private static _lastScoreTime;
+        static start(): void;
+        /**
+         * 注册每帧运行函数
+         * 由于使用Dictionary，所以先加入的函数并不一定会先运行
+         * @param process 处理函数，函数格式Function(passedTime:int)，passedTime表示上一帧到当前帧所经过的毫秒数
+         * @param priority 优先级，默认为FrameManager.NORMAL
+         *
+         */
+        static add(key: string, process: Function, thisObject: any, priority?: number): void;
+        /**
+         * 移除每帧运行函数
+         * @param process 处理函数
+         */
+        static remove(key: string): void;
+        private static onEnterFrame();
+        private static process(passedTime, processTime, funRepeatTime);
+        private static callbackHandler(callback, passedTime);
+        /**
+         * 启动FrameManager以来经过的毫秒数
+         */
+        static readonly time: number;
+    }
+}
+/**
+ * Created by cjb on 2018/5/3
+ */
+declare module process {
+    class EventProcess {
+        private _msg;
+        constructor();
+        addEvent(name: string, data: any): void;
+        clear(): void;
+        process(): void;
+    }
+}
+/**
+ * Created by cjb on 2018-04-30
+ */
+import GlobalData = common.GlobalData;
+import SingletonFactory = core.base.SingletonFactory;
+declare var stage: any;
+declare var loader: any;
+declare function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void;

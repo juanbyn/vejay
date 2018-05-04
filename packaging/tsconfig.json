@@ -9,14 +9,21 @@
     "../src/**/*"
   ],
   "files": [
-    "../src/core/Dictionary.ts",
-    "../src/core/EventDispatcher.ts",
-    "../src/core/base/Font.ts",
+    "../src/utils/Dictionary.ts",
+    "../src/utils/math/Rectangle.ts",
+    "../src/utils/math/NumberUtils.ts",
+    "../src/utils/math/Matrix.ts",
+    "../src/utils/math/Point.ts",
+
+    "../src/core/base/EventDispatcher.ts",
+    "../src/core/base/SingletonFactory.ts",
+    "../src/core/Font.ts",
+
     "../src/global/globalData.ts",
-    "../src/math/rectangle.ts",
-    "../src/display/displayObjectContainer.ts",
+
     "../src/display/displayObject.ts",
-    "../src/display/stage.ts",
-    "../src/display/bitmap.ts"
+    "../src/display/displayObjectContainer.ts",
+    "../src/display/Stage.ts",
+    "../src/display/component/Image.ts"
   ]
 }

@@ -1,5 +1,4 @@
 module display {
-    import Image = display.component.Image;
     import Rectangle = utils.math.Rectangle;
     
     export class DisplayObjectContainer extends DisplayObject {
@@ -103,8 +102,8 @@ module display {
             }
         }
         
-        public get asImage(): Image {
-            return (this instanceof Image) ? <Image><any>this : null;
+        public get asImage(): display.component.Image {
+            return (this instanceof Image) ? <display.component.Image><any>this : null;
         }
     }
 }
