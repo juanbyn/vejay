@@ -2,7 +2,7 @@ module display {
     import Rectangle = utils.math.Rectangle;
     import GlobalData = common.GlobalData;
     
-    export class Stage extends DisplayObjectContainer {
+    export class Stage extends Sprite {
         public static viewport: Rectangle;
         
         constructor() {

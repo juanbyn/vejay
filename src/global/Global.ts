@@ -4,7 +4,7 @@
 import GlobalData = common.GlobalData;
 import SingletonFactory = core.base.SingletonFactory;
 
-var stage;
+var stage: display.Stage;
 var loader;
 
 function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void {
@@ -13,6 +13,7 @@ function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number
     GlobalData.ScreenWidth = ScreenW ? ScreenW : stageW;
     GlobalData.ScreenHeight = ScreenH ? ScreenH : stageH;
     
-    stage = SingletonFactory.getInstance(display.Stage);
     new core.base.Init();
+    stage = SingletonFactory.getInstance(display.Stage);
+    SingletonFactory.getInstance(event.MouseEvent).init();
 }

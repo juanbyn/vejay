@@ -2,8 +2,12 @@
  * Created by cjb on 2018-05-01
  */
 
-module core {
+
+module core.base {
     import Dictionary = utils.Dictionary;
+    import DisplayObject = display.DisplayObject;
+    import Sprite = display.Sprite;
+    import Event = event.Event;
     
     export class EventDispatcher {
         /** key:事件名称 , value: [执行域, 方法, 参数, 是否只执行一次] */
@@ -29,6 +33,10 @@ module core {
                     return;
                 }
             }
+            // 监听鼠标事件自动打开鼠标监听
+            if (caller instanceof Sprite && Event.isMouseEvent(name)) {
+                caller.mouseEnable = true;
+            }
             events.push([caller, method, args, once]);
         }
         
@@ -39,8 +47,12 @@ module core {
             
             for (var i = 0; i < events.length; i++) {
                 e = events[i];
-                if (method === e[1]) {
+                if (caller === e[0] && method === e[1]) {
                     events.splice(i, 1);
+                    // 自动关闭鼠标监听
+                    if (caller instanceof Sprite && Event.isMouseEvent(name)) {
+                        caller.mouseEnable = false;
+                    }
                     return;
                 }
             }
@@ -56,8 +68,13 @@ module core {
             SingletonFactory.getInstance(process.EventProcess).addEvent(name, data);
         }
         
-        /** 执行 */
-        public static dispatch(name: string, data: any) {
+        /**
+         * 执行事件
+         * @param {string} name 事件名称
+         * @param data 参数
+         * @param {display.DisplayObject} target 指定对象
+         */
+        public static dispatch(name: string, data: any, target: DisplayObject = null) {
             var events: Array<any> = this._list.get(name);
             if (!events) {
                 return;
@@ -70,15 +87,19 @@ module core {
             for (var i = 0; i < events.length; i++) {
                 e = events[i];
                 caller = e[0];
-                method = e[1];
-                args = e[2].slice(0);
-                args.unshift(data);
                 
-                method.apply(caller, args);
-                if (e[3]) {
-                    events.splice(i--, 1);
+                if (!target || target === caller) {
+                    method = e[1];
+                    args = e[2].slice(0);
+                    args.unshift(data);
+                    method.apply(caller, args);
+                    
+                    if (e[3]) {
+                        events.splice(i--, 1);
+                    }
                 }
             }
         }
+        
     }
 }

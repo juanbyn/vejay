@@ -861,7 +861,8 @@ declare module utils.math {
 /**
  * Created by cjb on 2018-05-01
  */
-declare module core {
+declare module core.base {
+    import DisplayObject = display.DisplayObject;
     class EventDispatcher {
         /** key:事件名称 , value: [执行域, 方法, 参数, 是否只执行一次] */
         private static _list;
@@ -880,8 +881,13 @@ declare module core {
         removeEventListeners(name: string): void;
         /** 发送 */
         sendEvent(name: string, data: any): void;
-        /** 执行 */
-        static dispatch(name: string, data: any): void;
+        /**
+         * 执行事件
+         * @param {string} name 事件名称
+         * @param data 参数
+         * @param {display.DisplayObject} target 指定对象
+         */
+        static dispatch(name: string, data: any, target?: DisplayObject): void;
     }
 }
 /**
@@ -916,6 +922,7 @@ declare module common {
         static ScreenHeight: number;
         static StageWidth: number;
         static StageHeight: number;
+        static TouchNum: number;
         static Ctx0: WebGLRenderingContext;
         static Ctx1: CanvasRenderingContext2D;
         static CtxType: number;
@@ -923,7 +930,7 @@ declare module common {
 }
 declare module display {
     import Rectangle = utils.math.Rectangle;
-    import EventDispatcher = core.EventDispatcher;
+    import EventDispatcher = core.base.EventDispatcher;
     class DisplayObject extends EventDispatcher {
         private _x;
         private _y;
@@ -939,7 +946,6 @@ declare module display {
         rotationChange: boolean;
         parent: DisplayObjectContainer;
         visible: boolean;
-        mouseEnable: boolean;
         protected _viewport: Rectangle;
         constructor();
         x: number;
@@ -949,6 +955,7 @@ declare module display {
         scaleX: number;
         scale(scaleX: number, scaleY: number): void;
         rotation: number;
+        readonly viewport: utils.math.Rectangle;
         render(parentX: any, parentY: any): void;
     }
 }
@@ -974,7 +981,7 @@ declare module display {
 }
 declare module display {
     import Rectangle = utils.math.Rectangle;
-    class Stage extends DisplayObjectContainer {
+    class Stage extends Sprite {
         static viewport: Rectangle;
         constructor();
     }
@@ -983,10 +990,12 @@ declare module display {
  * Created by cjb on 2018-05-01
  */
 declare module display.component {
-    class Image extends DisplayObjectContainer {
+    class Image extends Component {
         private _img;
         constructor(imgSrc: string);
+        skin(src: string): void;
         private onLoad();
+        private onError();
         protected renderSelf(): void;
         private drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
     }
@@ -1024,13 +1033,64 @@ declare module display {
     }
 }
 /**
- * Created by cjb on 2018-04-30
+ * Created by cjb on 2018/5/4
  */
-import GlobalData = common.GlobalData;
-import SingletonFactory = core.base.SingletonFactory;
-declare var stage: any;
-declare var loader: any;
-declare function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void;
+declare module display {
+    class Sprite extends DisplayObjectContainer {
+        private _mouseEnable;
+        mouseThrough: boolean;
+        constructor();
+        mouseEnable: boolean;
+    }
+}
+/**
+ * Created by cjb on 2018/5/4
+ */
+declare module event {
+    import Sprite = display.Sprite;
+    class Event {
+        static MOUSE_EVENT: Array<string>;
+        static readonly MOUSE_CLICK: string;
+        static readonly MOUSE_DOWN: string;
+        static readonly MOUSE_UP: string;
+        static readonly MOUSE_MOVE: string;
+        target: display.Sprite;
+        currentTarget: display.Sprite;
+        touch: Touch;
+        constructor(touch: Touch, currentTarget?: Sprite, target?: Sprite);
+        static isMouseEvent(name: string): boolean;
+    }
+}
+/**
+ * Created by cjb on 2018/5/4
+ */
+declare module event {
+    import Dictionary = utils.Dictionary;
+    import Sprite = display.Sprite;
+    class EventModel {
+        private _targets;
+        constructor();
+        addTarget(touchId: number, target: Array<Sprite>): void;
+        getAndRemove(touchId: number): Array<Sprite>;
+        readonly targets: Dictionary;
+    }
+}
+/**
+ * Created by cjb on 2018/5/4
+ */
+declare module event {
+    class MouseEvent {
+        private _model;
+        private _stage;
+        constructor();
+        init(): void;
+        private onTouchStart(callback);
+        private onTouchMove(callback);
+        private onTouchEnd(callback);
+        private onTouchCancel(callback);
+        private searchTarget(parent, x, y);
+    }
+}
 declare module manager {
     /**
      * 帧运算管理器
@@ -1094,5 +1154,21 @@ declare module process {
         addEvent(name: string, data: any): void;
         clear(): void;
         process(): void;
+    }
+}
+/**
+ * Created by cjb on 2018-04-30
+ */
+import GlobalData = common.GlobalData;
+import SingletonFactory = core.base.SingletonFactory;
+declare var stage: display.Stage;
+declare var loader: any;
+declare function init(stageW: number, stageH: number, ScreenW?: number, ScreenH?: number): void;
+/**
+ * Created by cjb on 2018/5/4
+ */
+declare module display.component {
+    class Component extends Sprite {
+        constructor();
     }
 }

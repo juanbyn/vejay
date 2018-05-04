@@ -1,8 +1,9 @@
 module display {
     import Rectangle = utils.math.Rectangle;
-    import EventDispatcher = core.EventDispatcher;
+    import EventDispatcher = core.base.EventDispatcher;
     
     export class DisplayObject extends EventDispatcher {
+
         private _x: number = 0;
         private _y: number = 0;
         public posChange: boolean;
@@ -18,10 +19,9 @@ module display {
         
         public parent: DisplayObjectContainer;
         public visible: boolean = true;
-        public mouseEnable: boolean = false;
         
         protected _viewport: Rectangle = new Rectangle();
-        
+
         constructor() {
             super();
         }
@@ -110,6 +110,10 @@ module display {
             }
             this._rotation = value;
             this.rotationChange = true;
+        }
+    
+        get viewport(): utils.math.Rectangle {
+            return this._viewport;
         }
         
         public render(parentX, parentY) {

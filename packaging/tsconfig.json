@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "none",
     "target": "ES6",
     "declaration": true,
     "outFile": "./vejay.js"
   },
   "include": [
-    "../src/**/*"
+    "../src/**/*",
+    "../libs/**/*"
   ],
   "files": [
+    "../libs/wx.d.ts",
     "../src/utils/Dictionary.ts",
     "../src/utils/math/Rectangle.ts",
     "../src/utils/math/NumberUtils.ts",

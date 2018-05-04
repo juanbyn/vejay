@@ -3,7 +3,7 @@
  */
 
 module process {
-    import EventDispatcher = core.EventDispatcher;
+    import EventDispatcher = core.base.EventDispatcher;
     
     export class EventProcess {
         private _msg: Array<any>;

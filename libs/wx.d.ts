@@ -6,7 +6,7 @@ declare class wx {
     static createCanvas(): Canvas;
     
     /** 图片 */
-    static createImage(): Image;
+    static createImage(): HTMLImageElement;
     
     /** 字体 */
     /** 帧率 */
@@ -19,21 +19,21 @@ declare class wx {
     
     /** 系统事件 */
     /** 触摸事件 */
-    static onTouchStart(callback: touchCallback);
+    static onTouchStart(callback: Function);
     
-    static offTouchStart(callback: touchCallback);
+    static offTouchStart(callback: Function);
     
-    static onTouchMove(callback: touchCallback);
+    static onTouchMove(callback: Function);
     
-    static offTouchMove(callback: touchCallback);
+    static offTouchMove(callback: Function);
     
-    static onTouchEnd(callback: touchCallback);
+    static onTouchEnd(callback: Function);
     
-    static offTouchEnd(callback: touchCallback);
+    static offTouchEnd(callback: Function);
     
-    static onTouchCancel(callback: touchCallback);
+    static onTouchCancel(callback: Function);
     
-    static offTouchCancel(callback: touchCallback);
+    static offTouchCancel(callback: Function);
     
     //------------------------------------------------------------------------------------------------------------------
     // 设备
@@ -140,12 +140,23 @@ declare class Canvas {
 //     onload: Function;
 // }
 
+declare class Touch {
+    // Touch 对象的唯一标识符，只读属性。一次触摸动作(我们值的是手指的触摸)在平面上移动的整个过程中, 该标识符不变。可以根据它来判断跟踪的是否是同一次触摸过程。
+    identifier: number;
+    
+    //触点相对于屏幕左边沿的 X 坐标。
+    screenX: number;
+    
+    //触点相对于屏幕上边沿的 Y 坐标。
+    screenY: number;
+}
 /** 触摸事件回调*/
-declare class touchCallback {
+declare class TouchCallback {
     touches: Array<Touch>; // 前所有触摸点的列表
     changedTouches: Array<Touch>; // 触发此次事件的触摸点列表
     timeStamp: number; // 事件触发时的时间戳
 }
+
 
 declare class FileSystemManager {
     static access(object: Object);

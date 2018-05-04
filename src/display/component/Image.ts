@@ -3,7 +3,7 @@
  */
 
 module display.component {
-    export class Image extends DisplayObjectContainer {
+    export class Image extends Component {
         private _img: HTMLImageElement;
         
         constructor(imgSrc: string) {
@@ -11,11 +11,20 @@ module display.component {
             this._img = new HTMLImageElement();
             this._img.src = imgSrc;
             this._img.onload = this.onLoad;
+            this._img.onerror = this.onError;
+        }
+        
+        public skin(src: string) {
+        
         }
         
         private onLoad(): void {
             this.width = this.width === undefined ? this._img.width : this.width;
             this.height = this.height === undefined ? this._img.height : this.height;
+        }
+        
+        private onError(): void {
+        
         }
         
         protected renderSelf() {
