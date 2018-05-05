@@ -1,13 +1,12 @@
-module display {
-    import Rectangle = utils.math.Rectangle;
+module Vejay.display {
+    
+    import GlobalData = Vejay.global.GlobalData;
     
     export class DisplayObjectContainer extends DisplayObject {
         private _children: Array<DisplayObject> = [];
-        protected parentViewport: Rectangle;
         
         constructor() {
             super();
-            this.parentViewport = Stage.viewport;
         }
         
         public get numChildren(): number {
@@ -46,6 +45,10 @@ module display {
             return this._children.indexOf(child);
         }
         
+        public getChild(index: number): DisplayObject {
+            return this._children[index];
+        }
+        
         public removeAll() {
             this._children.length = 0;
         }
@@ -74,12 +77,13 @@ module display {
             }
             this._viewport.setTo(sX, sY, sWidth, sHeight);
             
-            if (!this.parentViewport.isIntersectRect(this._viewport)) {
+            var parentViewport = this.parent ? this.parent.viewport : Stage.viewport;
+            if (!parentViewport.isIntersectRect(this._viewport)) {
                 return;
             }
             // 渲染自身
-            var ctx = GlobalData.Ctx1;
-            this.setRotation(ctx,parentX + this.x, parentY + this.y);
+            var ctx = GlobalData.Ctx2d;
+            this.setRotation(ctx, parentX + this.x, parentY + this.y);
             this.renderSelf();
             ctx.restore();
             // 渲染子对象
@@ -90,7 +94,7 @@ module display {
             }
         }
         
-        private setRotation(ctx,x, y) {
+        private setRotation(ctx, x, y) {
             if (this.rotationChange) {
                 var px: number = x * 0.5;
                 var py: number = y * 0.5;
@@ -100,10 +104,6 @@ module display {
                 ctx.translate(diffX, diffY);
                 ctx.rotate(this.rotation);
             }
-        }
-        
-        public get asImage(): display.component.Image {
-            return (this instanceof Image) ? <display.component.Image><any>this : null;
         }
     }
 }

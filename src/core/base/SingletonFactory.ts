@@ -2,7 +2,7 @@
  * Created by cjb on 2018/5/3
  */
 
-module core.base {
+module Vejay.core.base {
     export class SingletonFactory {
         private static _factory: Array<any> = [];
         

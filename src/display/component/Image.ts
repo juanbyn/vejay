@@ -2,13 +2,16 @@
  * Created by cjb on 2018-05-01
  */
 
-module display.component {
+
+module Vejay.display.component {
+    import GlobalData = Vejay.global.GlobalData;
+    
     export class Image extends Component {
         private _img: HTMLImageElement;
         
         constructor(imgSrc: string) {
             super();
-            this._img = new HTMLImageElement();
+            this._img = wx.createImage();
             this._img.src = imgSrc;
             this._img.onload = this.onLoad;
             this._img.onerror = this.onError;
@@ -29,42 +32,43 @@ module display.component {
         
         protected renderSelf() {
             var viewport = this._viewport;
+            var parentViewport = this.parent.viewport;
             
-            if (this.parentViewport.containsRect(viewport)) {
+            if (parentViewport.containsRect(viewport)) {
                 this.drawImage(0, 0, viewport.width, viewport.height, viewport.x, viewport.y, viewport.width, viewport.height);
                 return;
             }
             let sx: number, sy: number, sWidth: number, sHeight: number;
             let dx: number, dy: number, dWidth: number, dHeight: number;
-            if (viewport.left < this.parentViewport.left) {
-                sx = this.parentViewport.left - viewport.left;
-                dx = this.parentViewport.left;
-                sWidth = dWidth = viewport.right - this.parentViewport.left;
+            if (viewport.left < parentViewport.left) {
+                sx = parentViewport.left - viewport.left;
+                dx = parentViewport.left;
+                sWidth = dWidth = viewport.right - parentViewport.left;
             } else {
                 sx = 0;
                 dx = viewport.x;
                 sWidth = dWidth = viewport.width;
             }
-            if (viewport.top < this.parentViewport.top) {
-                sy = this.parentViewport.top - viewport.top;
-                dy = this.parentViewport.top;
-                sHeight = dHeight = viewport.bottom - this.parentViewport.top;
+            if (viewport.top < parentViewport.top) {
+                sy = parentViewport.top - viewport.top;
+                dy = parentViewport.top;
+                sHeight = dHeight = viewport.bottom - parentViewport.top;
             } else {
                 sy = 0;
                 dy = viewport.y;
                 sHeight = dHeight = viewport.height;
             }
-            if (viewport.right > this.parentViewport.right) {
-                sWidth = dWidth = this.parentViewport.right - viewport.left;
+            if (viewport.right > parentViewport.right) {
+                sWidth = dWidth = parentViewport.right - viewport.left;
             }
-            if (viewport.bottom > this.parentViewport.bottom) {
-                sHeight = dHeight = this.parentViewport.bottom - viewport.top;
+            if (viewport.bottom > parentViewport.bottom) {
+                sHeight = dHeight = parentViewport.bottom - viewport.top;
             }
             this.drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
         }
         
         private drawImage(sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
-            var ctx = GlobalData.Ctx1;
+            var ctx = GlobalData.Ctx2d;
             
             // if (this.scaleChange && (this.scaleX !== 1 || this.scaleY !== 1)) {
             //     ctx.translate(0, dHeight + Stage.viewport.y * 2);

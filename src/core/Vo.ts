@@ -1,7 +1,7 @@
 /**
  * Created by cjb on 2018-04-30
  */
-module core.base {
+module Vejay.core {
     export class Vo {
         
         public static copy(from: Vo, to: Vo): Vo {

@@ -1,7 +1,7 @@
 /**
  * Created by cjb on 2018-04-29
  */
-module common {
+module Vejay.global {
     export class GlobalData {
         public static ScreenWidth: number;
         public static ScreenHeight: number;
@@ -10,8 +10,8 @@ module common {
         
         public static TouchNum: number = 2; // 支持多点触控数量
         
-        public static Ctx0: WebGLRenderingContext;
-        public static Ctx1: CanvasRenderingContext2D;
+        public static WebGl: WebGLRenderingContext;
+        public static Ctx2d: CanvasRenderingContext2D;
         public static CtxType: number = 0; // 0:webGL 1:canvas
     }
 }

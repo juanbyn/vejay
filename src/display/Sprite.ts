@@ -1,7 +1,7 @@
 /**
  * Created by cjb on 2018/5/4
  */
-module display {
+module Vejay.display {
     export class Sprite extends DisplayObjectContainer {
         private _mouseEnable: boolean;
         public mouseThrough: boolean;

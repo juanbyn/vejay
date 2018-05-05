@@ -1,4 +1,4 @@
-module utils.math {
+module Vejay.utils.math {
     
     let rectanglePool: Rectangle[] = [];
     

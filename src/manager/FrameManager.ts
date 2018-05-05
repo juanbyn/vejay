@@ -1,4 +1,4 @@
-module manager {
+module Vejay.manager {
     /**
      * 帧运算管理器
      * 负责管理所有注册对象的enterFrame函数，对每帧一定要计算的和卡的时候可以跳帧的进行区分处理

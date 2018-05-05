@@ -1,7 +1,7 @@
 /**
  * Created by cjb on 2018/5/3
  */
-module utils.math {
+module Vejay.utils.math {
     export class NumberUtils {
         public static TWO_PI: number = Math.PI * 2.0;
         public static Deg2Rad: number = Math.PI / 180;

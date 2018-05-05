@@ -1,4 +1,4 @@
-module utils.math {
+module Vejay.utils.math {
     let pointPool: Point[] = [];
     let DEG_TO_RAD: number = Math.PI / 180;
 

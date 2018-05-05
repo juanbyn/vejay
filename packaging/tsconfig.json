@@ -3,11 +3,16 @@
     "module": "none",
     "target": "ES6",
     "declaration": true,
+    "removeComments": true,
+    "skipDefaultLibCheck": true,
     "outFile": "./vejay.js"
   },
   "include": [
     "../src/**/*",
     "../libs/**/*"
+  ],
+  "exclude": [
+    "./node_modules/**/*"
   ],
   "files": [
     "../libs/wx.d.ts",
@@ -16,15 +21,16 @@
     "../src/utils/math/NumberUtils.ts",
     "../src/utils/math/Matrix.ts",
     "../src/utils/math/Point.ts",
-
+    "../src/process/MsgEvent.ts",
+    "../src/process/Process.ts",
+    "../src/global/globalData.ts",
     "../src/core/base/EventDispatcher.ts",
     "../src/core/base/SingletonFactory.ts",
     "../src/core/Font.ts",
-
-    "../src/global/globalData.ts",
-
     "../src/display/displayObject.ts",
     "../src/display/displayObjectContainer.ts",
+    "../src/display/Sprite.ts",
+    "../src/display/component/Component.ts",
     "../src/display/Stage.ts",
     "../src/display/component/Image.ts"
   ]

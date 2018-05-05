@@ -1,7 +1,10 @@
 /**
  * Created by cjb on 2018-05-01
  */
-module display {
+
+module Vejay.display {
+    import GlobalData = Vejay.global.GlobalData;
+    
     export class RenderContext {
         private ctx0: WebGLRenderingContext;
         private ctx1: CanvasRenderingContext2D;
@@ -12,8 +15,8 @@ module display {
                 console.error("get instance instead of new");
                 return;
             }
-            this.ctx0 = GlobalData.Ctx0;
-            this.ctx1 = GlobalData.Ctx1;
+            this.ctx0 = GlobalData.WebGl;
+            this.ctx1 = GlobalData.Ctx2d;
         }
         
         public static get instance(): RenderContext {

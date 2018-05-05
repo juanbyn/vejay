@@ -1,5 +1,5 @@
 
-module utils.math {
+module Vejay.utils.math {
 
     let PI = Math.PI;
     let TwoPI = PI * 2;

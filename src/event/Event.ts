@@ -2,21 +2,21 @@
  * Created by cjb on 2018/5/4
  */
 
-
-module event {
-    import Sprite = display.Sprite;
+module Vejay.event {
+    import Sprite = Vejay.display.Sprite;
     
     export class Event {
         //public static readonly TYPE_TOUCH: string = "touch";
         
-        public static MOUSE_EVENT: Array<string> = ["v_mouse_click", "v_mouse_down", "v_mouse_up", "v_mouse_move"];
-        public static readonly MOUSE_CLICK: string = this.MOUSE_EVENT[0];
-        public static readonly MOUSE_DOWN: string = this.MOUSE_EVENT[1];
-        public static readonly MOUSE_UP: string = this.MOUSE_EVENT[2];
-        public static readonly MOUSE_MOVE: string = this.MOUSE_EVENT[3];
+        public static MOUSE_EVENT: Array<string> = ["v_mouse_click", "v_mouse_down", "v_mouse_up", "v_mouse_move","v_mouse_out"];
+        public static readonly MOUSE_CLICK: string = Event.MOUSE_EVENT[0];
+        public static readonly MOUSE_DOWN: string = Event.MOUSE_EVENT[1];
+        public static readonly MOUSE_UP: string = Event.MOUSE_EVENT[2];
+        public static readonly MOUSE_MOVE: string = Event.MOUSE_EVENT[3];
+        public static readonly MOUSE_OUT: string = Event.MOUSE_EVENT[4];
         
-        public target: display.Sprite;
-        public currentTarget: display.Sprite;
+        public target: Sprite;
+        public currentTarget: Sprite;
         // public type: string;
         public touch: Touch;
         

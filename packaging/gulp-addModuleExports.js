@@ -17,7 +17,7 @@ var BABYLON = babylonDependency;
             let base = subModule ? 'BABYLON' : varName;
 
             let basicInit = `root["${base}"]${(subModule && !extendsRoot) ? '["' + varName + '"]' : ''} = f;`;
-            let sadGlobalPolution = (!subModule) ? `var globalObject = (typeof global !== 'undefined') ? global : ((typeof window !== 'undefined') ? window : this);
+            let sadGlobalPolution = (!subModule) ? `var globalObject = (typeof GameGlobal !== 'undefined') ? GameGlobal : ((typeof window !== 'undefined') ? window : this);
 globalObject["${base}"] = f;` : '';
             /*if (extendsRoot) {
                 basicInit = `__extends(root["BABYLON"], factory()); `

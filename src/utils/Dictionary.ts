@@ -1,9 +1,10 @@
 /**
  * Created by cjb on 2018-05-01
  */
-module utils {
+module Vejay.utils {
     export class Dictionary {
         private _obj: Object = {};
+        //private _num: number = 0;
         
         public get keys(): Array<string> {
             var arr = [];
@@ -26,6 +27,7 @@ module utils {
         
         public set(key: string, value: any): void {
             this._obj[key] = value;
+           // this._num++;
         }
         
         public get(key: string): any {
@@ -42,10 +44,16 @@ module utils {
         
         public remove(key: string): void {
             delete this._obj[key];
+           // this._num--;
         }
+        
+        // public get count(): number {
+        //     return this._num;
+        // }
         
         public clear(): void {
             this._obj = {};
+           // this._num = 0;
         }
         
     }

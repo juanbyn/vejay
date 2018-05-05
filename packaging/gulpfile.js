@@ -24,10 +24,12 @@ gulp.task('packaging', function () {
             .pipe(addModuleExports('Vejay'))
             // 输出js
             .pipe(gulp.dest(DEST))
+            .pipe(gulp.dest('../test/libs/'))
             // 输出压缩过的.min.js
             .pipe(uglify())
             .pipe(rename({extname: '.min.js'}))
             .pipe(gulp.dest(DEST))
+            .pipe(gulp.dest('../test/libs/'))
     );
 });
 
@@ -41,8 +43,10 @@ gulp.task('map', function () {
 
     return (tsResult
             .pipe(sourcemaps.write('.'))
+            .pipe(addModuleExports('Vejay'))
             // 输出js
             .pipe(gulp.dest(DEST))
+            .pipe(gulp.dest('../test/libs/'))
     );
 });
 

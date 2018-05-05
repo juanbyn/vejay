@@ -10,6 +10,7 @@ declare class wx {
     
     /** 字体 */
     /** 帧率 */
+    static requestAnimationFrame(func: Function);
     
     //------------------------------------------------------------------------------------------------------------------
     // 系统
@@ -129,8 +130,12 @@ declare class wx {
     
 }
 
+declare class canvas {
+    static getContext(string): CanvasRenderingContext2D | WebGLRenderingContext;
+}
+
 declare class Canvas {
-    getContext(contextType: string, contextAttributes?: CanvasRenderingContext2D | WebGLRenderingContext);
+    getContext(contextType: string, contextAttributes?: object): CanvasRenderingContext2D | WebGLRenderingContext;
 }
 
 // declare class Image {
@@ -143,13 +148,12 @@ declare class Canvas {
 declare class Touch {
     // Touch 对象的唯一标识符，只读属性。一次触摸动作(我们值的是手指的触摸)在平面上移动的整个过程中, 该标识符不变。可以根据它来判断跟踪的是否是同一次触摸过程。
     identifier: number;
-    
-    //触点相对于屏幕左边沿的 X 坐标。
     screenX: number;
-    
-    //触点相对于屏幕上边沿的 Y 坐标。
     screenY: number;
+    clientX: number;
+    clientY: number;
 }
+
 /** 触摸事件回调*/
 declare class TouchCallback {
     touches: Array<Touch>; // 前所有触摸点的列表
