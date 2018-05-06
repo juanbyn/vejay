@@ -8,8 +8,6 @@ module Vejay.global {
         public static StageWidth: number;
         public static StageHeight: number;
         
-        public static TouchNum: number = 2; // 支持多点触控数量
-        
         public static WebGl: WebGLRenderingContext;
         public static Ctx2d: CanvasRenderingContext2D;
         public static CtxType: number = 0; // 0:webGL 1:canvas

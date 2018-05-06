@@ -9,6 +9,14 @@ module Vejay.display {
             super();
         }
         
+        public dispose(): void {
+            for (var i = 0; i < this._children.length; i++) {
+                this._children[i].dispose();
+            }
+            this._children = null;
+            super.dispose();
+        }
+        
         public get numChildren(): number {
             return this._children.length;
         }

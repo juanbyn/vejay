@@ -3,34 +3,38 @@
  */
 
 module Vejay.event {
-    import Dictionary = Vejay.utils.Dictionary;
-    import Sprite = Vejay.display.Sprite;
     
     export class EventModel {
-        private _targets: Dictionary;
+        /** key:touchId  value:Event */
+        private _event: object;
         
         constructor() {
-            this._targets = new Dictionary();
+            this._event = {};
         }
         
-        public addTarget(touch: Touch, target: Array<Sprite>): void {
-            this._targets.set(touch.identifier.toString(), [touch, target]);
+        public addEvent(event: Event): void {
+            this._event[event.touch.identifier] = event;
         }
         
-        public getAndRemove(touchId: number | string): [Touch, Array<Sprite>] {
-            var target = this._targets.get(touchId.toString());
+        public getAndRemove(touchId: number | string): Event {
+            var target = this._event[touchId];
             if (target) {
-                this._targets.remove(touchId.toString());
+                delete this._event[touchId];
             }
             return target;
         }
         
-        public get(touchId: number | string): [Touch, Array<Sprite>] {
-            return this._targets.get(touchId.toString());
+        public get(touchId: number | string): Event {
+            return this._event[touchId];
         }
         
-        public get targets(): Dictionary {
-            return this._targets;
+        public remove(touchId: number | string): void {
+            delete this._event[touchId];
+        }
+        
+        public get events(): object {
+            return this._event;
         }
     }
 }
+

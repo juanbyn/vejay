@@ -9,7 +9,7 @@ module Vejay.display {
         
         constructor() {
             super();
-            
+            this.mouseOpen(true);
             this.x = (GlobalData.ScreenWidth - GlobalData.StageWidth) * 0.5;
             this.y = (GlobalData.ScreenHeight - GlobalData.StageHeight) * 0.5;
             this.width = GlobalData.StageWidth;

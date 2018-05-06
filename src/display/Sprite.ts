@@ -3,24 +3,21 @@
  */
 module Vejay.display {
     export class Sprite extends DisplayObjectContainer {
-        private _mouseEnable: boolean;
+        public mouseEnable: boolean;
         public mouseThrough: boolean;
         
         constructor() {
             super();
-            this._mouseEnable = false; // 默认关闭鼠标监听
-            this.mouseThrough = true; // 默认打开鼠标穿透
+            this.mouseEnable = false; // 默认关闭鼠标监听
+            this.mouseThrough = false; // 默认打开鼠标穿透
         }
         
-        get mouseEnable(): boolean {
-            return this._mouseEnable;
+        public dispose(): void {
+            super.dispose();
         }
         
-        set mouseEnable(value: boolean) {
-            this._mouseEnable = value;
-            if (value && this.parent) {
-                (this.parent as Sprite).mouseEnable = true;
-            }
+        public mouseOpen(value: boolean): void {
+            this.mouseEnable = this.mouseThrough = value;
         }
     }
 }

@@ -16,7 +16,6 @@
   ],
   "files": [
     "../libs/wx.d.ts",
-    "../src/utils/Dictionary.ts",
     "../src/utils/math/Rectangle.ts",
     "../src/utils/math/NumberUtils.ts",
     "../src/utils/math/Matrix.ts",

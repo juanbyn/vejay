@@ -27,6 +27,12 @@ module Vejay.display {
             super();
         }
         
+        public dispose(): void {
+            this.parent.removeChild(this);
+            this.parent = null;
+            this._viewport = null;
+        }
+        
         // get globalX(): number {
         //     return this._viewport.x;
         // }
@@ -120,11 +126,11 @@ module Vejay.display {
         public render(parentX, parentY) {
         
         }
-    
+        
         public get asImage(): Vejay.display.component.Image {
             return (this instanceof Vejay.display.component.Image) ? <Vejay.display.component.Image><any>this : null;
         }
-    
+        
         public get asSprite(): Vejay.display.Sprite {
             return (this instanceof Vejay.display.Sprite) ? <Vejay.display.Sprite><any>this : null;
         }

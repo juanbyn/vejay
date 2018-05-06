@@ -5,11 +5,11 @@
 module Vejay.event {
     import Sprite = Vejay.display.Sprite;
     import EventDispatcher = Vejay.core.base.EventDispatcher;
-    import GlobalData = Vejay.global.GlobalData;
     
     export class MouseEvent {
         private _model: EventModel;
-        private _stage: display.Stage;
+        private readonly _stage: display.Stage;
+        public static TouchNum: number = 2; // 支持多点触控数量
         
         constructor() {
             this._stage = SingletonFactory.getInstance(display.Stage);
@@ -23,80 +23,144 @@ module Vejay.event {
             wx.onTouchCancel(this.onTouchCancel.bind(this));
         }
         
-        /**  坐标所在的Sprite触发down */
+        /**
+         * 1. 坐标所在的Sprite触发down,超过最大缓存的点不缓存
+         * 2. 同时判断stage
+         * @param {TouchCallback} callback
+         */
         private onTouchStart(callback: TouchCallback) {
             var touches = callback.touches;
             var touch: Touch;
-            var target: Array<Sprite>;
-            var len: number = Math.min(GlobalData.TouchNum, touches.length);
+            var target: Targets;
+            var len: number = Math.min(MouseEvent.TouchNum, touches.length);
             
             for (var i = 0; i < len; i++) {
                 touch = touches[i];
-                target = this.searchTarget(this._stage, touch.clientX, touch.clientY);
-                
-                if (target[0]) {
-                    var event: Event = new Event(touch, target[0], target[1]);
-                    EventDispatcher.dispatch(Event.MOUSE_DOWN, event, target[1]);
-                    this._model.addTarget(touch, target);
+                if (this.isAdd(touch)) {
+                    var event: Event;
+                    target = this.searchTarget(this._stage, touch.clientX, touch.clientY);
+                    
+                    if (target.currentTarget) {
+                        event = new Event(touch, target.currentTarget, target.target);
+                        EventDispatcher.dispatch(Event.MOUSE_DOWN, event, target.target);
+                    }
+                    if (stage.viewport.contains(touch.clientX, touch.clientY)) {
+                        if (!event) {
+                            event = new Event(touch, stage, stage);
+                        }
+                        EventDispatcher.dispatch(Event.MOUSE_DOWN, event, stage);
+                    }
+                    if (event) {
+                        this._model.addEvent(event.clone(Event));
+                    }
                 }
             }
         }
         
-        /** 坐标所在的Sprite触发move,坐标超出之前触发down的Sprite触发out */
+        /** 判断是否新增加的touch点 */
+        private isAdd(touch: Touch): boolean {
+            for (var touchId in this._model.events) {
+                if (touchId === touch.identifier.toString()) {
+                    return false
+                }
+            }
+            return true;
+        }
+        
+        /**
+         * 1. touch点在舞台内触发move,超出舞台触发out
+         * 2. 如果是之前未缓存的点无效
+         * @param {TouchCallback} callback
+         */
         private onTouchMove(callback: TouchCallback) {
             var touches = callback.touches;
-            var touch: Touch;
-            var len: number = Math.min(GlobalData.TouchNum, touches.length);
-            var data: [Touch, Array<Sprite>]; // 缓存的touch和target
-            var target: Sprite;
+            var len: number = Math.min(MouseEvent.TouchNum, touches.length);
+            var data: Event; // 缓存的touch和target
             
             for (var i = 0; i < len; i++) {
-                touch = touches[i];
+                var touch: Touch = touches[i];
                 data = this._model.get(touch.identifier);
-                if (data[0].clientX !== touch.clientX || data[0].clientY !== touch.clientY) {
-                    data[0] = touch;
-                    target = data[1][1];
-                    var event = new Event(touch);
-                    
-                    if (target.viewport.contains(touch.clientX, touch.clientY)) { //TODO
-                        EventDispatcher.dispatch(Event.MOUSE_MOVE, event, target);
+                // 判断是否移动点
+                if (!data) {
+                    return;
+                }
+                if (data.touch.clientX !== touch.clientX || data.touch.clientY !== touch.clientY) {
+                    // 更新缓存touch
+                    data.touch = touch;
+                    var event = new Event(touch, stage, stage);
+                    // 判断move或者out
+                    if (stage.viewport.contains(touch.clientX, touch.clientY)) {
+                        EventDispatcher.dispatch(Event.MOUSE_MOVE, event);
                     } else {
-                        EventDispatcher.dispatch(Event.MOUSE_OUT, event, target);
+                        EventDispatcher.dispatch(Event.MOUSE_OUT, event);
                     }
                     
+                    // // 判断所有侦听move的Sprite对象
+                    // var event = new Event(touch);
+                    // var listeners: Array<Listener> = EventDispatcher.getListeners(Event.MOUSE_MOVE);
+                    // if (!listeners) {
+                    //     return;
+                    // }
+                    // for (var j = 0; j < listeners.length; j++) {
+                    //     var listener: Listener = listeners[j];
+                    //     if (listener.self instanceof Sprite) {
+                    //         // 判断move或者out
+                    //         if (listener.self.viewport.contains(touch.clientX, touch.clientY)) {
+                    //             EventDispatcher.dispatch(Event.MOUSE_MOVE, event, listener.self);
+                    //         } else {
+                    //             EventDispatcher.dispatch(Event.MOUSE_OUT, event, listener.self);
+                    //         }
+                    //     }
+                    // }
                 }
             }
         }
         
-        /** 坐标所在的Sprite触发up,如果是之前触发down的Sprite触发click */
+        /**
+         * 1. 已经移除的touch坐标所在的Sprite触发up,如果是之前触发down的Sprite触发click
+         * 2. 如果是之前未缓存的点无效
+         * 3. 同时判断stage
+         * @param {TouchCallback} callback
+         */
         private onTouchEnd(callback: TouchCallback) {
             var touches = callback.touches;
-            var target: Array<Sprite>;
+            var targets: Targets; // 返回的对象
             var touch: Touch; // 弹起的触摸点
-            var oldTarget: Array<Sprite>;
-            var data: [Touch, Array<Sprite>] = this._model.targets.values as [Touch, Array<Sprite>]; // 缓存的touch和target
-            var len: number = data.length;
+            var event: Event;
             
-            for (var i = 0; i < len; i++) {
-                touch = data[i][0];
-                oldTarget = data[i][1];
-                if (this.isRemoving(touch.identifier.toString(), touches)) {
-                    target = this.searchTarget(this._stage, touch.clientX, touch.clientY);
-                    if (target[0]) {
-                        var event = new Event(touch, target[0], target[1]);
-                        EventDispatcher.dispatch(Event.MOUSE_UP, event, target[1]);
+            // 循环判断缓存的touch是否移除
+            for (var key in this._model.events) {
+                event = this._model.get(key);
+                touch = event.touch;
+                
+                if (MouseEvent.isRemoving(touch.identifier, touches)) {
+                    // 搜索target判断up
+                    targets = this.searchTarget(this._stage, touch.clientX, touch.clientY);
+                    if (targets.currentTarget) {
+                        EventDispatcher.dispatch(Event.MOUSE_UP, event, targets.target);
+                        // 判断click
+                        if (event.target === targets.target) {
+                            EventDispatcher.dispatch(Event.MOUSE_CLICK, event, event.target);
+                        }
                     }
-                    if (oldTarget && oldTarget[1].viewport.contains(touch.clientX, touch.clientY)) {
-                        var event = new Event(touch, oldTarget[0], oldTarget[1]);
-                        EventDispatcher.dispatch(Event.MOUSE_CLICK, event, oldTarget[1]);
+                    // 判断舞台 TODO 舞台外down到舞台里面up会触发click
+                    if (stage.viewport.contains(touch.clientX, touch.clientY)) {
+                        if (!event) {
+                            event = new Event(touch, stage, stage);
+                        }
+                        EventDispatcher.dispatch(Event.MOUSE_UP, event, stage);
+                        EventDispatcher.dispatch(Event.MOUSE_CLICK, event, stage);
                     }
+                    // 移除缓存点
+                    this._model.remove(touch.identifier);
                 }
             }
         }
         
-        private isRemoving(id: string, touches: Array<Touch>): boolean {
+        /** 判断缓存的touch是否被移除 */
+        private static isRemoving(id: number, touches: Array<Touch>): boolean {
             for (var i = 0; i < touches.length; i++) {
-                if (id === touches[i].identifier.toString()) {
+                if (id === touches[i].identifier) {
                     return false;
                 }
             }
@@ -106,20 +170,25 @@ module Vejay.event {
         private onTouchCancel(callback: TouchCallback) {
             console.log("onTouchCancel" + callback);
             var touches = callback.touches;
-            var targets = this._model.targets;
             for (var i = 0; i < touches.length; i++) {
-                targets.remove(touches[i].identifier.toString());
+                this._model.remove(touches[i].identifier);
             }
         }
         
-        private searchTarget(parent: Sprite, x: number, y: number): Array<Sprite> {
+        /**
+         * 从stage往下搜索target
+         * @param {Vejay.display.Sprite} parent 父节点Sprite
+         * @param {number} x 鼠标点坐标x
+         * @param {number} y 鼠标点坐标y
+         * @returns Targets
+         */
+        private searchTarget(parent: Sprite, x: number, y: number): Targets {
             var child: Sprite;
             var currentTarget: Sprite;
             var target: Sprite;
             
             for (var i = parent.numChildren - 1; i >= 0; i--) {
                 child = parent.getChild(i).asSprite;
-                
                 if (child.mouseEnable && child.viewport.contains(x, y)) {
                     target = child;
                     if (child.mouseThrough) {
@@ -132,7 +201,7 @@ module Vejay.event {
             if (!currentTarget && target) {
                 currentTarget = target;
             }
-            return [currentTarget, target];
+            return new Targets(currentTarget, target);
         }
     }
 }

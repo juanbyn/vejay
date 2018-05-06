@@ -4,11 +4,10 @@
 
 
 module Vejay.core.base {
-    import Dictionary = Vejay.utils.Dictionary;
     
     export class EventDispatcher {
-        /** key:事件名称 , value: [执行域, 方法, 参数, 是否只执行一次] */
-        private static _list: Dictionary = new Dictionary();
+        /** key:事件名称 , value: [执行域, 方法, 参数, 监听对象] */
+        private static _list: object = {};
         
         /**
          * 添加事件监听
@@ -16,51 +15,61 @@ module Vejay.core.base {
          * @param caller 执行域
          * @param {Function} method 方法
          * @param {Array<any>} args [参数]
-         * @param {boolean} once 是否只执行一次
          */
-        public on(name: string, caller: any, method: Function, args: Array<any> = null, once: boolean = false): void {
-            var events: any = EventDispatcher._list.get(name);
-            var e;
+        public on(name: string, caller: any, method: Function, args: Array<any> = null): void {
+            var listeners: any = EventDispatcher._list[name];
+            var listener: Listener;
             
-            if (!events) {
-                events = [];
-                EventDispatcher._list.set(name, events);
+            if (!listeners) {
+                listeners = [];
+                EventDispatcher._list[name] = listeners;
             }
-            for (var i = 0; i < events.length; i++) {
-                e = events[i];
-                if (caller === e[0] && method === e[1]) {
-                    e = [caller, method, args, once, this];
+            for (var i = 0; i < listeners.length; i++) {
+                listener = listeners[i];
+                // 已经存在同一个作用域内同一函数,返回
+                if (caller === listener.caller && method === listener.method) {
                     return;
                 }
             }
-            // 监听鼠标事件自动打开鼠标监听
-            if (this instanceof display.Sprite && Vejay.event.Event.isMouseEvent(name)) {
-                this.mouseEnable = true;
-            }
-            events.push([caller, method, args, once, this]);
+            listeners.push(new Listener(caller, method, args, this));
         }
         
         /** 删除事件监听 */
         public off(name: string, caller: any, method: Function): void {
-            var events: Array<any> = EventDispatcher._list.get(name);
-            var e;
+            var listeners: Array<Listener> = EventDispatcher._list[name];
+            var listener: Listener;
             
-            for (var i = 0; i < events.length; i++) {
-                e = events[i];
-                if (caller === e[0] && method === e[1]) {
-                    events.splice(i, 1);
-                    // 自动关闭鼠标监听
-                    if (caller instanceof display.Sprite && Vejay.event.Event.isMouseEvent(name)) {
-                        caller.mouseEnable = false;
-                    }
+            for (var i = 0; i < listeners.length; i++) {
+                listener = listeners[i];
+                if (caller === listener.caller && method === listener.method) {
+                    listeners.splice(i, 1);
                     return;
                 }
             }
         }
         
+        /** 当前是否监听指定事件 */
+        public hasListen(name: string): boolean {
+            var listeners: Array<Listener> = EventDispatcher._list[name];
+            if (!listeners) {
+                return false;
+            }
+            for (var i = 0; i < listeners.length; i++) {
+                if (listeners[i].self === this) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        /** 获取监听指定事件名称的listeners */
+        public static getListeners(name: string): Array<any> {
+            return EventDispatcher._list[name];
+        }
+        
         /** 删除事件全部监听 */
-        public offAll(name: string): void {
-            EventDispatcher._list.remove(name);
+        public static offAll(name: string): void {
+           delete EventDispatcher._list[name];
         }
         
         /** 发送 */
@@ -75,33 +84,25 @@ module Vejay.core.base {
          * @param {display.DisplayObject} target 指定对象
          */
         public static dispatch(name: string, event: Vejay.event.Event, target: Vejay.display.DisplayObject = null) {
-            var events: Array<any> = this._list.get(name);
-            if (!events) {
+            var listeners: Array<Listener> = this._list[name];
+            if (!listeners) {
                 return;
             }
-            var e: Array<any>;
-            var caller: any;
-            var method: Function;
+            var listener: Listener;
             var args: Array<any>;
             
-            for (var i = 0; i < events.length; i++) {
-                e = events[i];
-                caller = e[0];
+            for (var i = 0; i < listeners.length; i++) {
+                listener = listeners[i];
                 
-                if (!target || e[4] === target) {
-                    method = e[1];
+                if (!target || listener.self === target) {
                     
-                    if (args instanceof Array) {
-                        args = e[2].slice(0);
+                    if (listener.args instanceof Array) {
+                        args = listener.args.slice(0);
                         args.unshift(event);
                     } else if (event instanceof Vejay.event.Event) {
                         args = [event];
                     }
-                    method.apply(caller, args);
-                    
-                    if (e[3]) {
-                        events.splice(i--, 1);
-                    }
+                    listener.method.apply(listener.caller, args);
                 }
             }
         }

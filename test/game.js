@@ -13,11 +13,12 @@ function init() {
     img = new Vejay.display.component.Image("res/icon/1.png");
     img.width = 34;
     img.height = 24;
+    img.mouseEnable = true;
     Vejay.stage.addChild(img);
 
 
     //Vejay.stage.bgColor = "blue";
-    //setInterval(loop, 1000);
+
     img.on(Vejay.event.Event.MOUSE_DOWN, this, onMouseDown);
     img.on(Vejay.event.Event.MOUSE_CLICK, this, onMouseClick);
 }
@@ -32,16 +33,18 @@ function onMouseDown(e) {
     touchId = e.touch.identifier;
     x = e.touch.clientX;
     y = e.touch.clientY;
+    img.scale(0.5,0.5);
     Vejay.stage.on(Vejay.event.Event.MOUSE_MOVE, this, onMouseMove);
-    Vejay.stage.on(Vejay.event.Event.MOUSE_OUT, this, onMouseUp);
+    Vejay.stage.on(Vejay.event.Event.MOUSE_OUT, this, onMouseOut);
     Vejay.stage.on(Vejay.event.Event.MOUSE_UP, this, onMouseUp);
 }
 
 function onMouseUp(e) {
     console.log("onMouseUp: ");
     console.log(e);
+    img.scale(1,1);
     Vejay.stage.off(Vejay.event.Event.MOUSE_MOVE, this, onMouseMove);
-    Vejay.stage.off(Vejay.event.Event.MOUSE_OUT, this, onMouseUp);
+    Vejay.stage.off(Vejay.event.Event.MOUSE_OUT, this, onMouseOut);
     Vejay.stage.off(Vejay.event.Event.MOUSE_UP, this, onMouseUp);
 }
 
@@ -54,7 +57,7 @@ function onMouseOut(e) {
     console.log("onMouseOut: ");
     console.log(e);
     Vejay.stage.off(Vejay.event.Event.MOUSE_MOVE, this, onMouseMove);
-    Vejay.stage.off(Vejay.event.Event.MOUSE_OUT, this, onMouseUp);
+    Vejay.stage.off(Vejay.event.Event.MOUSE_OUT, this, onMouseOut);
     Vejay.stage.off(Vejay.event.Event.MOUSE_UP, this, onMouseUp);
 }
 

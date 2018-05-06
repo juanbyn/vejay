@@ -5,7 +5,10 @@ module Vejay.display.component {
     export class Component extends Sprite {
         constructor() {
             super();
-            this.mouseThrough = false;
+        }
+    
+        public dispose(): void {
+            super.dispose();
         }
     }
 }

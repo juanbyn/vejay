@@ -4,15 +4,15 @@
 module Vejay.core {
     export class Vo {
         
-        public static copy(from: Vo, to: Vo): Vo {
+        public static copy<T>(from: Vo, to: T): T {
             for (var propName in from) {
                 to[propName] = from[propName];
             }
             return to;
         }
         
-        public clone(): Vo {
-            return Vo.copy(this, new Vo());
+        public clone<T>(clazz: { new(): T }): T {
+            return Vo.copy(this, new clazz());
         }
         
     }

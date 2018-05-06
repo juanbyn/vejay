@@ -17,6 +17,11 @@ module Vejay.display.component {
             this._img.onerror = this.onError;
         }
         
+        public dispose(): void {
+            this._img = null;
+            super.dispose();
+        }
+        
         public skin(src: string) {
         
         }
@@ -33,13 +38,15 @@ module Vejay.display.component {
         protected renderSelf() {
             var viewport = this._viewport;
             var parentViewport = this.parent.viewport;
-            
+            // 全部包含在里面
             if (parentViewport.containsRect(viewport)) {
-                this.drawImage(0, 0, viewport.width, viewport.height, viewport.x, viewport.y, viewport.width, viewport.height);
+                this.drawImage(0, 0, this.width, this.height, viewport.x, viewport.y, viewport.width, viewport.height);
                 return;
             }
+            // 超出父节点边界(默认都是stage)
             let sx: number, sy: number, sWidth: number, sHeight: number;
             let dx: number, dy: number, dWidth: number, dHeight: number;
+            // 左边超出
             if (viewport.left < parentViewport.left) {
                 sx = parentViewport.left - viewport.left;
                 dx = parentViewport.left;
@@ -49,6 +56,7 @@ module Vejay.display.component {
                 dx = viewport.x;
                 sWidth = dWidth = viewport.width;
             }
+            // 上面超出
             if (viewport.top < parentViewport.top) {
                 sy = parentViewport.top - viewport.top;
                 dy = parentViewport.top;

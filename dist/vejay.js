@@ -20,51 +20,6 @@ var Vejay;
 (function (Vejay) {
     var utils;
     (function (utils) {
-        class Dictionary {
-            constructor() {
-                this._obj = {};
-            }
-            get keys() {
-                var arr = [];
-                for (var key in this._obj) {
-                    arr.push(key);
-                }
-                return arr;
-            }
-            get values() {
-                var arr = [];
-                for (var key in this._obj) {
-                    arr.push(this._obj[key]);
-                }
-                return arr;
-            }
-            set(key, value) {
-                this._obj[key] = value;
-            }
-            get(key) {
-                var value = this._obj[key];
-                if (value !== undefined) {
-                    return value;
-                }
-                return null;
-            }
-            has(key) {
-                return this._obj.hasOwnProperty(key);
-            }
-            remove(key) {
-                delete this._obj[key];
-            }
-            clear() {
-                this._obj = {};
-            }
-        }
-        utils.Dictionary = Dictionary;
-    })(utils = Vejay.utils || (Vejay.utils = {}));
-})(Vejay || (Vejay = {}));
-var Vejay;
-(function (Vejay) {
-    var utils;
-    (function (utils) {
         var math;
         (function (math) {
             let rectanglePool = [];
@@ -754,7 +709,6 @@ var Vejay;
     (function (global) {
         class GlobalData {
         }
-        GlobalData.TouchNum = 2;
         GlobalData.CtxType = 0;
         global.GlobalData = GlobalData;
     })(global = Vejay.global || (Vejay.global = {}));
@@ -765,77 +719,77 @@ var Vejay;
     (function (core) {
         var base;
         (function (base) {
-            var Dictionary = Vejay.utils.Dictionary;
             class EventDispatcher {
-                on(name, caller, method, args = null, once = false) {
-                    var events = EventDispatcher._list.get(name);
-                    var e;
-                    if (!events) {
-                        events = [];
-                        EventDispatcher._list.set(name, events);
+                on(name, caller, method, args = null) {
+                    var listeners = EventDispatcher._list[name];
+                    var listener;
+                    if (!listeners) {
+                        listeners = [];
+                        EventDispatcher._list[name] = listeners;
                     }
-                    for (var i = 0; i < events.length; i++) {
-                        e = events[i];
-                        if (caller === e[0] && method === e[1]) {
-                            e = [caller, method, args, once, this];
+                    for (var i = 0; i < listeners.length; i++) {
+                        listener = listeners[i];
+                        if (caller === listener.caller && method === listener.method) {
                             return;
                         }
                     }
-                    if (this instanceof Vejay.display.Sprite && Vejay.event.Event.isMouseEvent(name)) {
-                        this.mouseEnable = true;
-                    }
-                    events.push([caller, method, args, once, this]);
+                    listeners.push(new Vejay.Listener(caller, method, args, this));
                 }
                 off(name, caller, method) {
-                    var events = EventDispatcher._list.get(name);
-                    var e;
-                    for (var i = 0; i < events.length; i++) {
-                        e = events[i];
-                        if (caller === e[0] && method === e[1]) {
-                            events.splice(i, 1);
-                            if (caller instanceof Vejay.display.Sprite && Vejay.event.Event.isMouseEvent(name)) {
-                                caller.mouseEnable = false;
-                            }
+                    var listeners = EventDispatcher._list[name];
+                    var listener;
+                    for (var i = 0; i < listeners.length; i++) {
+                        listener = listeners[i];
+                        if (caller === listener.caller && method === listener.method) {
+                            listeners.splice(i, 1);
                             return;
                         }
                     }
                 }
-                offAll(name) {
-                    EventDispatcher._list.remove(name);
+                hasListen(name) {
+                    var listeners = EventDispatcher._list[name];
+                    if (!listeners) {
+                        return false;
+                    }
+                    for (var i = 0; i < listeners.length; i++) {
+                        if (listeners[i].self === this) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                static getListeners(name) {
+                    return EventDispatcher._list[name];
+                }
+                static offAll(name) {
+                    delete EventDispatcher._list[name];
                 }
                 sendEvent(name, data) {
                     base.SingletonFactory.getInstance(Vejay.event.EventProcess).addEvent(name, data);
                 }
                 static dispatch(name, event, target = null) {
-                    var events = this._list.get(name);
-                    if (!events) {
+                    var listeners = this._list[name];
+                    if (!listeners) {
                         return;
                     }
-                    var e;
-                    var caller;
-                    var method;
+                    var listener;
                     var args;
-                    for (var i = 0; i < events.length; i++) {
-                        e = events[i];
-                        caller = e[0];
-                        if (!target || e[4] === target) {
-                            method = e[1];
-                            if (args instanceof Array) {
-                                args = e[2].slice(0);
+                    for (var i = 0; i < listeners.length; i++) {
+                        listener = listeners[i];
+                        if (!target || listener.self === target) {
+                            if (listener.args instanceof Array) {
+                                args = listener.args.slice(0);
                                 args.unshift(event);
                             }
                             else if (event instanceof Vejay.event.Event) {
                                 args = [event];
                             }
-                            method.apply(caller, args);
-                            if (e[3]) {
-                                events.splice(i--, 1);
-                            }
+                            listener.method.apply(listener.caller, args);
                         }
                     }
                 }
             }
-            EventDispatcher._list = new Dictionary();
+            EventDispatcher._list = {};
             base.EventDispatcher = EventDispatcher;
         })(base = core.base || (core.base = {}));
     })(core = Vejay.core || (Vejay.core = {}));
@@ -907,6 +861,11 @@ var Vejay;
                 this.rotationChange = false;
                 this.visible = true;
                 this._viewport = new Rectangle();
+            }
+            dispose() {
+                this.parent.removeChild(this);
+                this.parent = null;
+                this._viewport = null;
             }
             get x() {
                 return this._x;
@@ -999,6 +958,13 @@ var Vejay;
                 super();
                 this._children = [];
             }
+            dispose() {
+                for (var i = 0; i < this._children.length; i++) {
+                    this._children[i].dispose();
+                }
+                this._children = null;
+                super.dispose();
+            }
             get numChildren() {
                 return this._children.length;
             }
@@ -1088,17 +1054,14 @@ var Vejay;
         class Sprite extends display.DisplayObjectContainer {
             constructor() {
                 super();
-                this._mouseEnable = false;
-                this.mouseThrough = true;
+                this.mouseEnable = false;
+                this.mouseThrough = false;
             }
-            get mouseEnable() {
-                return this._mouseEnable;
+            dispose() {
+                super.dispose();
             }
-            set mouseEnable(value) {
-                this._mouseEnable = value;
-                if (value && this.parent) {
-                    this.parent.mouseEnable = true;
-                }
+            mouseOpen(value) {
+                this.mouseEnable = this.mouseThrough = value;
             }
         }
         display.Sprite = Sprite;
@@ -1113,7 +1076,9 @@ var Vejay;
             class Component extends display.Sprite {
                 constructor() {
                     super();
-                    this.mouseThrough = false;
+                }
+                dispose() {
+                    super.dispose();
                 }
             }
             component.Component = Component;
@@ -1129,6 +1094,7 @@ var Vejay;
         class Stage extends display.Sprite {
             constructor() {
                 super();
+                this.mouseOpen(true);
                 this.x = (GlobalData.ScreenWidth - GlobalData.StageWidth) * 0.5;
                 this.y = (GlobalData.ScreenHeight - GlobalData.StageHeight) * 0.5;
                 this.width = GlobalData.StageWidth;
@@ -1167,6 +1133,10 @@ var Vejay;
                     this._img.onload = this.onLoad;
                     this._img.onerror = this.onError;
                 }
+                dispose() {
+                    this._img = null;
+                    super.dispose();
+                }
                 skin(src) {
                 }
                 onLoad() {
@@ -1179,7 +1149,7 @@ var Vejay;
                     var viewport = this._viewport;
                     var parentViewport = this.parent.viewport;
                     if (parentViewport.containsRect(viewport)) {
-                        this.drawImage(0, 0, viewport.width, viewport.height, viewport.x, viewport.y, viewport.width, viewport.height);
+                        this.drawImage(0, 0, this.width, this.height, viewport.x, viewport.y, viewport.width, viewport.height);
                         return;
                     }
                     let sx, sy, sWidth, sHeight;
@@ -1276,222 +1246,12 @@ var Vejay;
                 }
                 return to;
             }
-            clone() {
-                return Vo.copy(this, new Vo());
+            clone(clazz) {
+                return Vo.copy(this, new clazz());
             }
         }
         core.Vo = Vo;
     })(core = Vejay.core || (Vejay.core = {}));
-})(Vejay || (Vejay = {}));
-var Vejay;
-(function (Vejay) {
-    var event;
-    (function (event) {
-        class Event {
-            constructor(touch, currentTarget, target) {
-                this.touch = touch;
-                if (currentTarget) {
-                    this.currentTarget = currentTarget;
-                }
-                if (target) {
-                    this.target = target;
-                }
-            }
-            static isMouseEvent(name) {
-                if (this.MOUSE_EVENT.indexOf(name) > -1) {
-                    return true;
-                }
-                return false;
-            }
-        }
-        Event.MOUSE_EVENT = ["v_mouse_click", "v_mouse_down", "v_mouse_up", "v_mouse_move", "v_mouse_out"];
-        Event.MOUSE_CLICK = Event.MOUSE_EVENT[0];
-        Event.MOUSE_DOWN = Event.MOUSE_EVENT[1];
-        Event.MOUSE_UP = Event.MOUSE_EVENT[2];
-        Event.MOUSE_MOVE = Event.MOUSE_EVENT[3];
-        Event.MOUSE_OUT = Event.MOUSE_EVENT[4];
-        event.Event = Event;
-    })(event = Vejay.event || (Vejay.event = {}));
-})(Vejay || (Vejay = {}));
-var Vejay;
-(function (Vejay) {
-    var event;
-    (function (event) {
-        var Dictionary = Vejay.utils.Dictionary;
-        class EventModel {
-            constructor() {
-                this._targets = new Dictionary();
-            }
-            addTarget(touch, target) {
-                this._targets.set(touch.identifier.toString(), [touch, target]);
-            }
-            getAndRemove(touchId) {
-                var target = this._targets.get(touchId.toString());
-                if (target) {
-                    this._targets.remove(touchId.toString());
-                }
-                return target;
-            }
-            get(touchId) {
-                return this._targets.get(touchId.toString());
-            }
-            get targets() {
-                return this._targets;
-            }
-        }
-        event.EventModel = EventModel;
-    })(event = Vejay.event || (Vejay.event = {}));
-})(Vejay || (Vejay = {}));
-var Vejay;
-(function (Vejay) {
-    var event;
-    (function (event_1) {
-        var EventDispatcher = Vejay.core.base.EventDispatcher;
-        var Process = Vejay.process.Process;
-        class EventProcess extends Process {
-            constructor() {
-                super("EventProcess");
-                this._msg = [];
-                SingletonFactory.getInstance(Vejay.event.MouseEvent).init();
-            }
-            get isRun() {
-                return true;
-            }
-            complete() {
-            }
-            addEvent(name, e) {
-                this._msg.push([name, e]);
-            }
-            clear() {
-                this._msg.length = 0;
-            }
-            process() {
-                var event;
-                while (this._msg.length > 0) {
-                    event = this._msg.shift();
-                    EventDispatcher.dispatch(event[0], event[1]);
-                }
-            }
-        }
-        event_1.EventProcess = EventProcess;
-    })(event = Vejay.event || (Vejay.event = {}));
-})(Vejay || (Vejay = {}));
-var Vejay;
-(function (Vejay) {
-    var event;
-    (function (event_2) {
-        var EventDispatcher = Vejay.core.base.EventDispatcher;
-        var GlobalData = Vejay.global.GlobalData;
-        class MouseEvent {
-            constructor() {
-                this._stage = SingletonFactory.getInstance(Vejay.display.Stage);
-                this._model = SingletonFactory.getInstance(event.EventModel);
-            }
-            init() {
-                wx.onTouchStart(this.onTouchStart.bind(this));
-                wx.onTouchMove(this.onTouchMove.bind(this));
-                wx.onTouchEnd(this.onTouchEnd.bind(this));
-                wx.onTouchCancel(this.onTouchCancel.bind(this));
-            }
-            onTouchStart(callback) {
-                var touches = callback.touches;
-                var touch;
-                var target;
-                var len = Math.min(GlobalData.TouchNum, touches.length);
-                for (var i = 0; i < len; i++) {
-                    touch = touches[i];
-                    target = this.searchTarget(this._stage, touch.clientX, touch.clientY);
-                    if (target[0]) {
-                        var event = new event_2.Event(touch, target[0], target[1]);
-                        EventDispatcher.dispatch(event_2.Event.MOUSE_DOWN, event, target[1]);
-                        this._model.addTarget(touch, target);
-                    }
-                }
-            }
-            onTouchMove(callback) {
-                var touches = callback.touches;
-                var touch;
-                var len = Math.min(GlobalData.TouchNum, touches.length);
-                var data;
-                var target;
-                for (var i = 0; i < len; i++) {
-                    touch = touches[i];
-                    data = this._model.get(touch.identifier);
-                    if (data[0].clientX !== touch.clientX || data[0].clientY !== touch.clientY) {
-                        data[0] = touch;
-                        target = data[1][1];
-                        var event = new event_2.Event(touch);
-                        if (target.viewport.contains(touch.clientX, touch.clientY)) {
-                            EventDispatcher.dispatch(event_2.Event.MOUSE_MOVE, event, target);
-                        }
-                        else {
-                            EventDispatcher.dispatch(event_2.Event.MOUSE_OUT, event, target);
-                        }
-                    }
-                }
-            }
-            onTouchEnd(callback) {
-                var touches = callback.touches;
-                var target;
-                var touch;
-                var oldTarget;
-                var data = this._model.targets.values;
-                var len = data.length;
-                for (var i = 0; i < len; i++) {
-                    touch = data[i][0];
-                    oldTarget = data[i][1];
-                    if (this.isRemoving(touch.identifier.toString(), touches)) {
-                        target = this.searchTarget(this._stage, touch.clientX, touch.clientY);
-                        if (target[0]) {
-                            var event = new event_2.Event(touch, target[0], target[1]);
-                            EventDispatcher.dispatch(event_2.Event.MOUSE_UP, event, target[1]);
-                        }
-                        if (oldTarget && oldTarget[1].viewport.contains(touch.clientX, touch.clientY)) {
-                            var event = new event_2.Event(touch, oldTarget[0], oldTarget[1]);
-                            EventDispatcher.dispatch(event_2.Event.MOUSE_CLICK, event, oldTarget[1]);
-                        }
-                    }
-                }
-            }
-            isRemoving(id, touches) {
-                for (var i = 0; i < touches.length; i++) {
-                    if (id === touches[i].identifier.toString()) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            onTouchCancel(callback) {
-                console.log("onTouchCancel" + callback);
-                var touches = callback.touches;
-                var targets = this._model.targets;
-                for (var i = 0; i < touches.length; i++) {
-                    targets.remove(touches[i].identifier.toString());
-                }
-            }
-            searchTarget(parent, x, y) {
-                var child;
-                var currentTarget;
-                var target;
-                for (var i = parent.numChildren - 1; i >= 0; i--) {
-                    child = parent.getChild(i).asSprite;
-                    if (child.mouseEnable && child.viewport.contains(x, y)) {
-                        target = child;
-                        if (child.mouseThrough) {
-                            currentTarget = child;
-                            this.searchTarget(child, x, y);
-                        }
-                        break;
-                    }
-                }
-                if (!currentTarget && target) {
-                    currentTarget = target;
-                }
-                return [currentTarget, target];
-            }
-        }
-        event_2.MouseEvent = MouseEvent;
-    })(event = Vejay.event || (Vejay.event = {}));
 })(Vejay || (Vejay = {}));
 var Vejay;
 (function (Vejay) {
@@ -1541,6 +1301,249 @@ var Vejay;
         }
         display.RenderContext = RenderContext;
     })(display = Vejay.display || (Vejay.display = {}));
+})(Vejay || (Vejay = {}));
+var Vejay;
+(function (Vejay) {
+    var event;
+    (function (event) {
+        var Vo = Vejay.core.Vo;
+        class Targets extends Vo {
+            constructor(currentTarget, target) {
+                super();
+                this.currentTarget = currentTarget;
+                this.target = target;
+            }
+        }
+        event.Targets = Targets;
+    })(event = Vejay.event || (Vejay.event = {}));
+})(Vejay || (Vejay = {}));
+(function (Vejay) {
+    var event;
+    (function (event) {
+        class Event extends event.Targets {
+            constructor(touch, currentTarget, target) {
+                super(currentTarget, target);
+                this.touch = touch;
+            }
+            static isMouseEvent(name) {
+                if (this.MOUSE_EVENT.indexOf(name) > -1) {
+                    return true;
+                }
+                return false;
+            }
+        }
+        Event.MOUSE_EVENT = ["v_mouse_click", "v_mouse_down", "v_mouse_up", "v_mouse_move", "v_mouse_out"];
+        Event.MOUSE_CLICK = Event.MOUSE_EVENT[0];
+        Event.MOUSE_DOWN = Event.MOUSE_EVENT[1];
+        Event.MOUSE_UP = Event.MOUSE_EVENT[2];
+        Event.MOUSE_MOVE = Event.MOUSE_EVENT[3];
+        Event.MOUSE_OUT = Event.MOUSE_EVENT[4];
+        event.Event = Event;
+    })(event = Vejay.event || (Vejay.event = {}));
+})(Vejay || (Vejay = {}));
+var Vejay;
+(function (Vejay) {
+    var event;
+    (function (event_1) {
+        class EventModel {
+            constructor() {
+                this._event = {};
+            }
+            addEvent(event) {
+                this._event[event.touch.identifier] = event;
+            }
+            getAndRemove(touchId) {
+                var target = this._event[touchId];
+                if (target) {
+                    delete this._event[touchId];
+                }
+                return target;
+            }
+            get(touchId) {
+                return this._event[touchId];
+            }
+            remove(touchId) {
+                delete this._event[touchId];
+            }
+            get events() {
+                return this._event;
+            }
+        }
+        event_1.EventModel = EventModel;
+    })(event = Vejay.event || (Vejay.event = {}));
+})(Vejay || (Vejay = {}));
+var Vejay;
+(function (Vejay) {
+    var event;
+    (function (event_2) {
+        var EventDispatcher = Vejay.core.base.EventDispatcher;
+        var Process = Vejay.process.Process;
+        class EventProcess extends Process {
+            constructor() {
+                super("EventProcess");
+                this._msg = [];
+                SingletonFactory.getInstance(Vejay.event.MouseEvent).init();
+            }
+            get isRun() {
+                return true;
+            }
+            complete() {
+            }
+            addEvent(name, e) {
+                this._msg.push([name, e]);
+            }
+            clear() {
+                this._msg.length = 0;
+            }
+            process() {
+                var event;
+                while (this._msg.length > 0) {
+                    event = this._msg.shift();
+                    EventDispatcher.dispatch(event[0], event[1]);
+                }
+            }
+        }
+        event_2.EventProcess = EventProcess;
+    })(event = Vejay.event || (Vejay.event = {}));
+})(Vejay || (Vejay = {}));
+var Vejay;
+(function (Vejay) {
+    var event;
+    (function (event_3) {
+        var EventDispatcher = Vejay.core.base.EventDispatcher;
+        class MouseEvent {
+            constructor() {
+                this._stage = SingletonFactory.getInstance(Vejay.display.Stage);
+                this._model = SingletonFactory.getInstance(event.EventModel);
+            }
+            init() {
+                wx.onTouchStart(this.onTouchStart.bind(this));
+                wx.onTouchMove(this.onTouchMove.bind(this));
+                wx.onTouchEnd(this.onTouchEnd.bind(this));
+                wx.onTouchCancel(this.onTouchCancel.bind(this));
+            }
+            onTouchStart(callback) {
+                var touches = callback.touches;
+                var touch;
+                var target;
+                var len = Math.min(MouseEvent.TouchNum, touches.length);
+                for (var i = 0; i < len; i++) {
+                    touch = touches[i];
+                    if (this.isAdd(touch)) {
+                        var event;
+                        target = this.searchTarget(this._stage, touch.clientX, touch.clientY);
+                        if (target.currentTarget) {
+                            event = new event_3.Event(touch, target.currentTarget, target.target);
+                            EventDispatcher.dispatch(event_3.Event.MOUSE_DOWN, event, target.target);
+                        }
+                        if (Vejay.stage.viewport.contains(touch.clientX, touch.clientY)) {
+                            if (!event) {
+                                event = new event_3.Event(touch, Vejay.stage, Vejay.stage);
+                            }
+                            EventDispatcher.dispatch(event_3.Event.MOUSE_DOWN, event, Vejay.stage);
+                        }
+                        if (event) {
+                            this._model.addEvent(event.clone(event_3.Event));
+                        }
+                    }
+                }
+            }
+            isAdd(touch) {
+                for (var touchId in this._model.events) {
+                    if (touchId === touch.identifier.toString()) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            onTouchMove(callback) {
+                var touches = callback.touches;
+                var len = Math.min(MouseEvent.TouchNum, touches.length);
+                var data;
+                for (var i = 0; i < len; i++) {
+                    var touch = touches[i];
+                    data = this._model.get(touch.identifier);
+                    if (!data) {
+                        return;
+                    }
+                    if (data.touch.clientX !== touch.clientX || data.touch.clientY !== touch.clientY) {
+                        data.touch = touch;
+                        var event = new event_3.Event(touch, Vejay.stage, Vejay.stage);
+                        if (Vejay.stage.viewport.contains(touch.clientX, touch.clientY)) {
+                            EventDispatcher.dispatch(event_3.Event.MOUSE_MOVE, event);
+                        }
+                        else {
+                            EventDispatcher.dispatch(event_3.Event.MOUSE_OUT, event);
+                        }
+                    }
+                }
+            }
+            onTouchEnd(callback) {
+                var touches = callback.touches;
+                var targets;
+                var touch;
+                var event;
+                for (var key in this._model.events) {
+                    event = this._model.get(key);
+                    touch = event.touch;
+                    if (MouseEvent.isRemoving(touch.identifier, touches)) {
+                        targets = this.searchTarget(this._stage, touch.clientX, touch.clientY);
+                        if (targets.currentTarget) {
+                            EventDispatcher.dispatch(event_3.Event.MOUSE_UP, event, targets.target);
+                            if (event.target === targets.target) {
+                                EventDispatcher.dispatch(event_3.Event.MOUSE_CLICK, event, event.target);
+                            }
+                        }
+                        if (Vejay.stage.viewport.contains(touch.clientX, touch.clientY)) {
+                            if (!event) {
+                                event = new event_3.Event(touch, Vejay.stage, Vejay.stage);
+                            }
+                            EventDispatcher.dispatch(event_3.Event.MOUSE_UP, event, Vejay.stage);
+                            EventDispatcher.dispatch(event_3.Event.MOUSE_CLICK, event, Vejay.stage);
+                        }
+                        this._model.remove(touch.identifier);
+                    }
+                }
+            }
+            static isRemoving(id, touches) {
+                for (var i = 0; i < touches.length; i++) {
+                    if (id === touches[i].identifier) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            onTouchCancel(callback) {
+                console.log("onTouchCancel" + callback);
+                var touches = callback.touches;
+                for (var i = 0; i < touches.length; i++) {
+                    this._model.remove(touches[i].identifier);
+                }
+            }
+            searchTarget(parent, x, y) {
+                var child;
+                var currentTarget;
+                var target;
+                for (var i = parent.numChildren - 1; i >= 0; i--) {
+                    child = parent.getChild(i).asSprite;
+                    if (child.mouseEnable && child.viewport.contains(x, y)) {
+                        target = child;
+                        if (child.mouseThrough) {
+                            currentTarget = child;
+                            this.searchTarget(child, x, y);
+                        }
+                        break;
+                    }
+                }
+                if (!currentTarget && target) {
+                    currentTarget = target;
+                }
+                return new event_3.Targets(currentTarget, target);
+            }
+        }
+        MouseEvent.TouchNum = 2;
+        event_3.MouseEvent = MouseEvent;
+    })(event = Vejay.event || (Vejay.event = {}));
 })(Vejay || (Vejay = {}));
 var Vejay;
 (function (Vejay) {
@@ -1630,6 +1633,18 @@ var Vejay;
         FrameManager._frameAvgScore = [];
         manager.FrameManager = FrameManager;
     })(manager = Vejay.manager || (Vejay.manager = {}));
+})(Vejay || (Vejay = {}));
+var Vejay;
+(function (Vejay) {
+    class Listener {
+        constructor(caller, medthod, args, self) {
+            this.caller = caller;
+            this.method = medthod;
+            this.args = args;
+            this.self = self;
+        }
+    }
+    Vejay.Listener = Listener;
 })(Vejay || (Vejay = {}));
 
 //# sourceMappingURL=vejay.js.map

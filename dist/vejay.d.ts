@@ -16,18 +16,6 @@ var __extends = (this && this.__extends) || (function () {
             };
         })();
 
-declare module Vejay.utils {
-    class Dictionary {
-        private _obj;
-        readonly keys: Array<string>;
-        readonly values: Array<any>;
-        set(key: string, value: any): void;
-        get(key: string): any;
-        has(key: string): boolean;
-        remove(key: string): void;
-        clear(): void;
-    }
-}
 declare module Vejay.utils.math {
     class Rectangle {
         static release(rect: Rectangle): void;
@@ -173,7 +161,6 @@ declare module Vejay.global {
         static ScreenHeight: number;
         static StageWidth: number;
         static StageHeight: number;
-        static TouchNum: number;
         static WebGl: WebGLRenderingContext;
         static Ctx2d: CanvasRenderingContext2D;
         static CtxType: number;
@@ -182,9 +169,11 @@ declare module Vejay.global {
 declare module Vejay.core.base {
     class EventDispatcher {
         private static _list;
-        on(name: string, caller: any, method: Function, args?: Array<any>, once?: boolean): void;
+        on(name: string, caller: any, method: Function, args?: Array<any>): void;
         off(name: string, caller: any, method: Function): void;
-        offAll(name: string): void;
+        hasListen(name: string): boolean;
+        static getListeners(name: string): Array<any>;
+        static offAll(name: string): void;
         sendEvent(name: string, data: any): void;
         static dispatch(name: string, event: Vejay.event.Event, target?: Vejay.display.DisplayObject): void;
     }
@@ -226,6 +215,7 @@ declare module Vejay.display {
         visible: boolean;
         protected _viewport: Rectangle;
         constructor();
+        dispose(): void;
         x: number;
         y: number;
         pos(x: number, y: number): void;
@@ -243,6 +233,7 @@ declare module Vejay.display {
     class DisplayObjectContainer extends DisplayObject {
         private _children;
         constructor();
+        dispose(): void;
         readonly numChildren: number;
         readonly children: Array<DisplayObject>;
         addChild(child: DisplayObject): void;
@@ -259,15 +250,17 @@ declare module Vejay.display {
 }
 declare module Vejay.display {
     class Sprite extends DisplayObjectContainer {
-        private _mouseEnable;
+        mouseEnable: boolean;
         mouseThrough: boolean;
         constructor();
-        mouseEnable: boolean;
+        dispose(): void;
+        mouseOpen(value: boolean): void;
     }
 }
 declare module Vejay.display.component {
     class Component extends Sprite {
         constructor();
+        dispose(): void;
     }
 }
 declare module Vejay.display {
@@ -284,6 +277,7 @@ declare module Vejay.display.component {
     class Image extends Component {
         private _img;
         constructor(imgSrc: string);
+        dispose(): void;
         skin(src: string): void;
         private onLoad();
         private onError();
@@ -306,62 +300,10 @@ declare module Vejay {
 }
 declare module Vejay.core {
     class Vo {
-        static copy(from: Vo, to: Vo): Vo;
-        clone(): Vo;
-    }
-}
-declare module Vejay.event {
-    import Sprite = Vejay.display.Sprite;
-    class Event {
-        static MOUSE_EVENT: Array<string>;
-        static readonly MOUSE_CLICK: string;
-        static readonly MOUSE_DOWN: string;
-        static readonly MOUSE_UP: string;
-        static readonly MOUSE_MOVE: string;
-        static readonly MOUSE_OUT: string;
-        target: Sprite;
-        currentTarget: Sprite;
-        touch: Touch;
-        constructor(touch: Touch, currentTarget?: Sprite, target?: Sprite);
-        static isMouseEvent(name: string): boolean;
-    }
-}
-declare module Vejay.event {
-    import Dictionary = Vejay.utils.Dictionary;
-    import Sprite = Vejay.display.Sprite;
-    class EventModel {
-        private _targets;
-        constructor();
-        addTarget(touch: Touch, target: Array<Sprite>): void;
-        getAndRemove(touchId: number | string): [Touch, Array<Sprite>];
-        get(touchId: number | string): [Touch, Array<Sprite>];
-        readonly targets: Dictionary;
-    }
-}
-declare module Vejay.event {
-    import Process = Vejay.process.Process;
-    class EventProcess extends Process implements IProcess {
-        private _msg;
-        constructor();
-        readonly isRun: Boolean;
-        complete(): void;
-        addEvent(name: string, e: Event): void;
-        clear(): void;
-        process(): void;
-    }
-}
-declare module Vejay.event {
-    class MouseEvent {
-        private _model;
-        private _stage;
-        constructor();
-        init(): void;
-        private onTouchStart(callback);
-        private onTouchMove(callback);
-        private onTouchEnd(callback);
-        private isRemoving(id, touches);
-        private onTouchCancel(callback);
-        private searchTarget(parent, x, y);
+        static copy<T>(from: Vo, to: T): T;
+        clone<T>(clazz: {
+            new (): T;
+        }): T;
     }
 }
 declare module Vejay.display {
@@ -381,6 +323,68 @@ declare module Vejay.display {
         constructor();
         static readonly instance: RenderContext;
         scale(x: number, y: number): void;
+    }
+}
+declare module Vejay.event {
+    import Sprite = Vejay.display.Sprite;
+    import Vo = Vejay.core.Vo;
+    class Targets extends Vo {
+        currentTarget: Sprite;
+        target: Sprite;
+        constructor(currentTarget: Sprite, target: Sprite);
+    }
+}
+declare module Vejay.event {
+    import Sprite = Vejay.display.Sprite;
+    class Event extends Targets {
+        static MOUSE_EVENT: Array<string>;
+        static readonly MOUSE_CLICK: string;
+        static readonly MOUSE_DOWN: string;
+        static readonly MOUSE_UP: string;
+        static readonly MOUSE_MOVE: string;
+        static readonly MOUSE_OUT: string;
+        static isMouseEvent(name: string): boolean;
+        touch: Touch;
+        constructor(touch?: Touch, currentTarget?: Sprite, target?: Sprite);
+    }
+}
+declare module Vejay.event {
+    class EventModel {
+        private _event;
+        constructor();
+        addEvent(event: Event): void;
+        getAndRemove(touchId: number | string): Event;
+        get(touchId: number | string): Event;
+        remove(touchId: number | string): void;
+        readonly events: object;
+    }
+}
+declare module Vejay.event {
+    import Process = Vejay.process.Process;
+    class EventProcess extends Process implements IProcess {
+        private _msg;
+        constructor();
+        readonly isRun: Boolean;
+        complete(): void;
+        addEvent(name: string, e: Event): void;
+        clear(): void;
+        process(): void;
+    }
+}
+declare module Vejay.event {
+    class MouseEvent {
+        private _model;
+        private readonly _stage;
+        static TouchNum: number;
+        constructor();
+        init(): void;
+        private onTouchStart(callback);
+        private isAdd(touch);
+        private onTouchMove(callback);
+        private onTouchEnd(callback);
+        private static isRemoving(id, touches);
+        private onTouchCancel(callback);
+        private searchTarget(parent, x, y);
     }
 }
 declare module Vejay.manager {
@@ -419,6 +423,15 @@ declare module Vejay {
         isRun: Boolean;
         process(): void;
         complete(): void;
+    }
+}
+declare module Vejay {
+    class Listener {
+        caller: any;
+        method: Function;
+        args: Array<any>;
+        self: any;
+        constructor(caller: any, medthod: Function, args: Array<any>, self: any);
     }
 }
 
